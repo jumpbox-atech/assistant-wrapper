@@ -106,6 +106,24 @@ public class SystemAdminController {
         return "redirect:/admin/users?updated=yes";
     }
 
+    @GetMapping("/admin/users/delete/{maskedId}")
+    public String deleteChat(
+            @PathVariable(name = "maskedId") String maskedId,
+            RedirectAttributes redirectAttributes) {
+        String loggedInUser = SecurityContextHolder.getContext().getAuthentication().getName();
+        alertList = new ArrayList<>(1);
+
+        OutputTool outputTool = service.deleteUser(loggedInUser, maskedId);
+        if (outputTool.getResult().equals(OutputTool.Result.EXCEPTION)) {
+            alertList.add(new Alert().build(Alert.AlertType.DANGER, outputTool.getComment()));
+            redirectAttributes.addFlashAttribute("alertList", alertList);
+            return "redirect:/admin/users?deleted=false";
+        }
+        alertList.add(new Alert().build(Alert.AlertType.SUCCESS, outputTool.getComment()));
+        redirectAttributes.addFlashAttribute("alertList", alertList);
+        return "redirect:/admin/users?deleted=true";
+    }
+
 
     @GetMapping(value = {"/admin/whitelist"})
     public String showWhitelistHome(Model model, RedirectAttributes redirectAttributes) {

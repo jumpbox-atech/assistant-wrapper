@@ -1,5 +1,8 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark" xmlns:th="http://www.thymeleaf.org">
+<html lang="en"
+      data-bs-theme="dark"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
 <head>
     <head th:insert="~{_base.html :: _head}"></head>
     <link rel="stylesheet" th:href="@{/css/datatables.min.css}">
@@ -39,6 +42,15 @@
                 <tbody>
                 <tr th:each="item : ${recordList}">
                     <td>
+                        <a id="user_delete" sec:authorize="hasAnyRole('ADMIN')"
+                           href="#" class="btn btn-outline-danger btn-sm"
+                           th:attr="field-data=${item.maskedId}" onclick="showConfirmationModal(this)"
+                           data-bs-toggle="tooltip"
+                           data-bs-delay="50"
+                           data-bs-placement="top"
+                           title="Delete User">
+                            <i class="fas fa-ban"></i>
+                        </a>
                         <a th:href="@{/admin/users/update(username=${item.username})}"
                            class="btn btn-outline-secondary btn-sm"><i class="fa-solid fa-pencil"></i></a>
                     </td>
@@ -56,7 +68,28 @@
 </main>
 
 
+<!-- Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmationModalLabel">Confirmation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete this user?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <a id="deleteLink" href="#" class="btn btn-danger">Delete</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <custom th:insert="~{_base.html :: _bootstrap_js}"></custom>
-<script th:src="@{/js/table.js}"></script>
+<script th:src="@{/js/pages/user_list.js}"></script>
 </body>
 </html>

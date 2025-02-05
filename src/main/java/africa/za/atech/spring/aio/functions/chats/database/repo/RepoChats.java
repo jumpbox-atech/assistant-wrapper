@@ -2,6 +2,7 @@ package africa.za.atech.spring.aio.functions.chats.database.repo;
 
 
 import africa.za.atech.spring.aio.functions.chats.database.model.Chats;
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.ListCrudRepository;
 
@@ -17,5 +18,10 @@ public interface RepoChats extends ListCrudRepository<Chats, Long> {
     Optional<Chats> findByUserChatAndMaskedId(String username, String maskedId);
 
     Optional<Chats> findByMaskedId(String maskedId);
+
+    List<Chats> findAllByCreatedBy(String username);
+
+    @Transactional
+    void deleteAllByIdIn(List<Long> ids);
 
 }

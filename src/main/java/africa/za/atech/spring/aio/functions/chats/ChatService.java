@@ -49,7 +49,6 @@ public class ChatService {
     private final RepoChatsMeta repoChatsMeta;
     private final RepoChatsHistory repoChatsHistory;
 
-
     public List<ChatListDTO> getUserChatList(String username) {
         List<Chats> chats = repoChats.findUsersActiveChats(username);
         List<ChatListDTO> list = new ArrayList<>(chats.size());
@@ -109,6 +108,24 @@ public class ChatService {
         chatsHistory.ifPresent(repoChatsHistory::delete);
 
         return new OutputTool().build(OutputTool.Result.SUCCESS, "Chat deleted successfully.", null);
+    }
+
+    public OutputTool deleteAllUsersChats(String username) {
+        List<Chats> chat = repoChats.findAllByCreatedBy(username);
+        List<Long> chatIds = new ArrayList<>();
+        List<Long> historyIds = new ArrayList<>();
+        List<Long> metaIds = new ArrayList<>();
+
+        for (Chats c : chat) {
+            chatIds.add(c.getId());
+            historyIds.add(repoChatsHistory.findByChatsId(c.getId()).get().getId());
+            metaIds.add(repoChatsMeta.findByChatsId(c.getId()).get().getId());
+        }
+
+        repoChatsMeta.deleteByIdIn(metaIds);
+        repoChatsHistory.deleteByIdIn(historyIds);
+        repoChats.deleteAllByIdIn(chatIds);
+        return new OutputTool().build(OutputTool.Result.SUCCESS, "User chat list deleted successfully.", null);
     }
 
     public OutputTool processQuestion(String REQUEST_REFERENCE, ChatRequestDTO chatRequestDTO, boolean isNewChat) throws JsonProcessingException, InterruptedException {

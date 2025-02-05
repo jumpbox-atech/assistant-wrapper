@@ -1,6 +1,7 @@
 package africa.za.atech.spring.aio.functions.users;
 
 import africa.za.atech.spring.aio.exceptions.GenericException;
+import africa.za.atech.spring.aio.functions.chats.ChatService;
 import africa.za.atech.spring.aio.functions.users.dto.RegisterDTO;
 import africa.za.atech.spring.aio.functions.users.dto.UserProfileDTO;
 import africa.za.atech.spring.aio.functions.users.dto.WhitelistRegDTO;
@@ -54,6 +55,7 @@ public class UsersService {
     private final UsersRepo repoUsers;
     private final WhitelistRegRepo repoWhiteList;
     private final EmailTools emailTools;
+    private final ChatService chatService;
 
     private final PasswordEncoder encoder;
 
@@ -263,6 +265,25 @@ public class UsersService {
             return outputTool;
         }
         return new OutputTool().build(OutputTool.Result.SUCCESS, "Temp password send to registered email", null);
+    }
+
+    public OutputTool deleteUser(String loggedInUser, String maskedId) {
+        // Get User
+        Optional<Users> userRecord = repoUsers.findAllByMaskedId(maskedId);
+        if (userRecord.isEmpty()) {
+            return new OutputTool().build(OutputTool.Result.EXCEPTION, "User record not found.", null);
+        }
+        if (userRecord.get().getUsername().equalsIgnoreCase(loggedInUser)) {
+            return new OutputTool().build(OutputTool.Result.EXCEPTION, "Unable to process action.", null);
+        }
+        OutputTool.Result result = chatService.deleteAllUsersChats(userRecord.get().getUsername()).getResult();
+
+        if (result == OutputTool.Result.SUCCESS) {
+            repoUsers.delete(userRecord.get());
+            return new OutputTool().build(OutputTool.Result.SUCCESS, "User deleted successfully.", null);
+        } else {
+            return new OutputTool().build(OutputTool.Result.EXCEPTION, "Unable to delete user record.", null);
+        }
     }
 
     public void addSystemAdmin() {
