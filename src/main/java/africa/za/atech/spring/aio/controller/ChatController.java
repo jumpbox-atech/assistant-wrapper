@@ -73,7 +73,7 @@ public class ChatController {
     public String chatManagement(Model model) {
 
         String loggedInUser = SecurityContextHolder.getContext().getAuthentication().getName();
-        List<ChatListDTO> chatListDTOS = chatService.getUserChatList("", loggedInUser);
+        List<ChatListDTO> chatListDTOS = chatService.getUserChatList(loggedInUser);
         model.addAttribute("recordList", chatListDTOS);
         return "chat/chat_list";
     }
@@ -84,7 +84,7 @@ public class ChatController {
             @RequestParam(value = "id") String chatId) {
 
         String loggedInUser = SecurityContextHolder.getContext().getAuthentication().getName();
-        ChatListDTO chatListDTO = (ChatListDTO) chatService.getUserChatToRename("", loggedInUser, chatId).getObject();
+        ChatListDTO chatListDTO = (ChatListDTO) chatService.getUserChatToRename(loggedInUser, chatId).getObject();
         model.addAttribute("formObject", chatListDTO);
         return "chat/chat_rename";
     }
@@ -96,7 +96,7 @@ public class ChatController {
         String loggedInUser = SecurityContextHolder.getContext().getAuthentication().getName();
         alertList = new ArrayList<>(1);
 
-        OutputTool outputTool = chatService.renameUserChat("", loggedInUser, formObject);
+        OutputTool outputTool = chatService.renameUserChat(loggedInUser, formObject);
         alertList.add(new Alert().build(Alert.AlertType.SUCCESS, outputTool.getComment()));
         redirectAttributes.addFlashAttribute("alertList", alertList);
         return "redirect:/chat/list?updated=true";
@@ -109,7 +109,7 @@ public class ChatController {
         String loggedInUser = SecurityContextHolder.getContext().getAuthentication().getName();
         alertList = new ArrayList<>(1);
 
-        OutputTool outputTool = chatService.deleteUserChat("", loggedInUser, maskedId);
+        OutputTool outputTool = chatService.deleteUserChat(loggedInUser, maskedId);
         if (outputTool.getResult().equals(OutputTool.Result.EXCEPTION)) {
             alertList.add(new Alert().build(Alert.AlertType.DANGER, outputTool.getComment()));
             redirectAttributes.addFlashAttribute("alertList", alertList);
@@ -165,7 +165,7 @@ public class ChatController {
         alertList = new ArrayList<>(1);
 
         // Add users list of chats
-        ChatResponseDTO storedResponse = chatService.getStoredChat("", loggedInUser, chatId);
+        ChatResponseDTO storedResponse = chatService.getStoredChat(loggedInUser, chatId);
         Collections.reverse(storedResponse.getChatHistoryDTOS());
 
         // Add new object with the users assigned bot and chatId

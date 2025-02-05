@@ -50,7 +50,7 @@ public class ChatService {
     private final RepoChatsHistory repoChatsHistory;
 
 
-    public List<ChatListDTO> getUserChatList(String requestRef, String username) {
+    public List<ChatListDTO> getUserChatList(String username) {
         List<Chats> chats = repoChats.findUsersActiveChats(username);
         List<ChatListDTO> list = new ArrayList<>(chats.size());
         for (Chats c : chats) {
@@ -63,16 +63,13 @@ public class ChatService {
     /**
      * @return ChatListDTO in object if successful
      */
-    public OutputTool getUserChatToRename(String requestRef, String username, String chatId) {
+    public OutputTool getUserChatToRename(String username, String chatId) {
         Optional<Chats> chats = repoChats.findByUserChatAndMaskedId(username, chatId);
-        if (chats.isEmpty()) {
-            // return Output with exception
-        }
         ChatListDTO dao = new ChatListDTO().build(chats.get().getMaskedId(), username, chats.get().getCreatedDateTime(), chats.get().getDescription());
         return new OutputTool().build(OutputTool.Result.SUCCESS, "", dao);
     }
 
-    public ChatResponseDTO getStoredChat(String requestRef, String username, String chatId) {
+    public ChatResponseDTO getStoredChat(String username, String chatId) {
         Optional<Chats> chatRecord = repoChats.findByUserChatAndMaskedId(username, chatId);
         ChatsHistory localHistory = repoChatsHistory.findByChatsId(chatRecord.get().getId()).get();
 
@@ -92,14 +89,14 @@ public class ChatService {
         return chatResponseDTO;
     }
 
-    public OutputTool renameUserChat(String requestRef, String username, ChatListDTO chatListDTO) {
+    public OutputTool renameUserChat(String username, ChatListDTO chatListDTO) {
         Optional<Chats> chat = repoChats.findByUserChatAndMaskedId(username, chatListDTO.getChatId());
         chat.get().setDescription(chatListDTO.getDescription().trim());
         repoChats.save(chat.get());
         return new OutputTool().build(OutputTool.Result.SUCCESS, "Chat renamed successfully", null);
     }
 
-    public OutputTool deleteUserChat(String requestRef, String username, String chatId) {
+    public OutputTool deleteUserChat(String username, String chatId) {
         Optional<Chats> chat = repoChats.findByUserChatAndMaskedId(username, chatId);
         if (chat.isEmpty()) {
             return new OutputTool().build(OutputTool.Result.EXCEPTION, "Unable to find chat with id: " + HelperTools.wrapVar(chatId), null);
