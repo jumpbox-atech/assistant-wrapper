@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark" xmlns:th="http://www.thymeleaf.org">
+<head th:insert="~{_public.html :: _head}"></head>
+<body>
+
+<!--Main Content Section-->
+<main id="main" class="main container d-flex flex-column">
+
+    <div id="working_area" class="flex-grow-1 p-5 rounded" style="min-height: 80vh;">
+        <div class="row justify-content-center">
+            <div class="col-md-4">
+
+                <h1 th:insert="~{_public.html :: _app-name}"></h1>
+                <p class="text-center"></p>
+
+                <form id="form_main_content" action="#" th:action="@{/login}" method="POST">
+
+                    <custom th:insert="~{_base.html :: _alert}"></custom>
+
+                    <div class="input-group mb-3">
+                        <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+                        <input type="text" class="form-control" id="username" name="username"
+                               placeholder="username" required>
+                    </div>
+
+                    <div class="input-group mb-3">
+                                    <span class="input-group-text" id="password-icon"><i
+                                            class="fa-solid fa-lock"></i></span>
+                        <input type="password" class="form-control" id="password" name="password"
+                               placeholder="password" required>
+                    </div>
+
+                    <div class="input-group mb-3">
+                        <div class="col">
+
+                            <button id="form_main_submit_button" type="button"
+                                    class="btn btn-outline-success justify-content-end w-100"
+                                    onclick="disableButton()">
+                        <span id="form_main_submit_spinner" class="spinner-border spinner-border-sm d-none"
+                              role="status"
+                              aria-hidden="true"></span>
+                                <span id="form_main_submit_icon">Sign In <i
+                                        class="fa-solid fa-right-to-bracket"></i></span>
+                            </button>
+
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <!-- Left-aligned button -->
+                        <a th:href="@{/register}" class="btn cbtn-outline-secondary">Register</a>
+                        <!-- Right-aligned button -->
+                        <a th:href="@{/forgot}" class="btn cbtn-outline-secondary">Forgot?</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<custom th:insert="~{_public.html :: _bootstrap_js}"></custom>
+<script th:src="@{/js/form_control.js}"></script>
+</body>
+</html>

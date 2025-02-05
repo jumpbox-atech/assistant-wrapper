@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark" xmlns:th="http://www.thymeleaf.org">
+<head th:insert="~{_base.html :: _head}">
+
+</head>
+<body>
+<custom th:insert="~{_base.html :: _navbar}"></custom>
+
+<!--Main Content Section-->
+<main id="main" class="main container d-flex flex-column">
+
+    <custom th:insert="~{_base.html :: _alert}"></custom>
+
+    <div id="working_area" class="flex-grow-1 p-5 rounded" style="min-height: 80vh;">
+        <div class="row justify-content-center">
+            <div th:utext="${welcome}"></div>
+            <div class="col-md-4">
+                <img class="img-fluid image-opacity" th:src="@{/images/default.png}" alt=" ">
+            </div>
+        </div>
+    </div>
+
+</main>
+
+
+<custom th:insert="~{_base.html :: _bootstrap_js}"></custom>
+</body>
+</html>

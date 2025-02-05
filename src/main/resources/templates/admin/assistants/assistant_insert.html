@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark" xmlns:th="http://www.thymeleaf.org">
+<head th:insert="~{_base.html :: _head}">
+</head>
+<body>
+<custom th:insert="~{_base.html :: _navbar}"></custom>
+
+<!--Main Content Section-->
+<main id="main" class="main container d-flex flex-column">
+
+    <custom th:insert="~{_base.html :: _alert}"></custom>
+
+    <h1 class="text-center">Assistants Management</h1>
+    <div id="working_area" class="flex-grow-1 p-5 rounded border" style="min-height: 80vh;">
+
+        <!--  CONTENT      -->
+        <form id="form_main_content" action="#" th:action="@{/admin/assistants}" th:object="${formObject}"
+              method="POST">
+            <div class="input-group mb-3">
+                <span class="input-group-text" id="name-icon">
+                    <i class="fa-solid fa-comment-dots"></i>
+                </span>
+                <input th:field="*{name}" type="text" class="form-control" id="wl-name" name="wl-name"
+                       placeholder="name" required>
+            </div>
+
+            <div class="input-group mb-3">
+                                    <span class="input-group-text" id="description-icon">
+                                        <i class="fa-solid fa-file-signature"></i>
+                                    </span>
+                <input th:field="*{description}" type="text" class="form-control" id="wl-description"
+                       name="wl-description"
+                       placeholder="description" required>
+            </div>
+
+            <div class="input-group mb-3">
+                                    <span class="input-group-text" id="organisationId-icon">
+                                       <i class="fa-solid fa-building"></i>
+                                    </span>
+                <input th:field="*{organisationId}" type="text" class="form-control" id="wl-organisationId"
+                       name="wl-organisationId"
+                       placeholder="openai organisation id" required>
+            </div>
+
+            <div class="input-group mb-3">
+                                    <span class="input-group-text" id="assistantId-icon">
+                                       <i class="fa-solid fa-robot"></i>
+                                    </span>
+                <input th:field="*{assistantId}" type="text" class="form-control" id="wl-assistantId"
+                       name="wl-assistantId"
+                       placeholder="openai assistant id" required>
+            </div>
+
+            <div class="input-group mb-3">
+                                    <span class="input-group-text" id="apiKey-icon">
+                                       <i class="fa-solid fa-key"></i>
+                                    </span>
+                <input th:field="*{apiKey}" type="text" class="form-control" id="wl-apiKey" name="wl-apiKey"
+                       placeholder="openai assistant api key" required>
+            </div>
+
+            <div class="input-group mb-3">
+                                    <span class="input-group-text" id="additionalInstructions-icon">
+                                       <i class="fa-solid fa-note-sticky"></i>
+                                    </span>
+                <input th:field="*{additionalInstructions}" type="text" class="form-control"
+                       id="wl-additionalInstructions" name="wl-additionalInstructions"
+                       placeholder="assistant additional instructions">
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center">
+                <!-- Left-aligned button -->
+                <a th:href="@{/admin/assistants}" class="btn btn-outline-secondary justify-content-end">
+                    <span></span> Cancel
+                </a>
+                <!-- Right-aligned button -->
+                <button id="form_main_submit_button" type="button" class="btn btn-outline-success justify-content-end"
+                        onclick="disableButton()">
+                        <span id="form_main_submit_spinner" class="spinner-border spinner-border-sm d-none"
+                              role="status"
+                              aria-hidden="true"></span>
+                    <span id="form_main_submit_icon"><i class="fa-solid fa-floppy-disk"></i></span>
+                </button>
+            </div>
+        </form>
+
+    </div>
+</main>
+
+
+<custom th:insert="~{_base.html :: _bootstrap_js}"></custom>
+<script th:src="@{/js/form_control.js}"></script>
+</body>
+</html>

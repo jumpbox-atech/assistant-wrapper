@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark" xmlns:th="http://www.thymeleaf.org">
+<head th:insert="~{_public.html :: _head}"></head>
+<body>
+
+<!--Main Content Section-->
+<main id="main" class="main container d-flex flex-column">
+
+    <div id="working_area" class="flex-grow-1 p-5 rounded" style="min-height: 80vh;">
+        <div class="row justify-content-center">
+            <div class="col-md-4">
+
+                <custom th:insert="~{_base.html :: _alert}"></custom>
+
+                <h1 th:insert="~{_public.html :: _app-name}"></h1>
+                <p class="text-center">Forgot Password</p>
+
+                <form id="form_main_content" action="#" th:action="@{/forgot}" th:object="${formObject}" method="POST">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text"><i class="fa-solid fa-passport"></i></span>
+                        <input th:field="*{username}" type="text" class="form-control" id="username"
+                               placeholder="username"
+                               required>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <!-- Left-aligned button -->
+                        <a th:href="@{/}" class="btn btn-outline-secondary justify-content-end ">
+                            <span></span> Cancel
+                        </a>
+                        <!-- Right-aligned button -->
+                        <button id="form_main_submit_button" type="button"
+                                class="btn btn-outline-success justify-content-end"
+                                onclick="disableButton()">
+                        <span id="form_main_submit_spinner" class="spinner-border spinner-border-sm d-none"
+                              role="status"
+                              aria-hidden="true"></span>
+                            <span id="form_main_submit_icon">Submit <i class="fa-solid fa-paper-plane"></i></span>
+                        </button>
+
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<custom th:insert="~{_public.html :: _bootstrap_js}"></custom>
+<script th:src="@{/js/form_control.js}"></script>
+</body>
+</html>

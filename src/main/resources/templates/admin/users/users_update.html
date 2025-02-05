@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head th:insert="~{_base.html :: _head}">
+</head>
+<body>
+<custom th:insert="~{_base.html :: _navbar}"></custom>
+
+<!--Main Content Section-->
+<main id="main" class="main container d-flex flex-column">
+
+    <custom th:insert="~{_base.html :: _alert}"></custom>
+
+    <h1 class="text-center">Assistants Management</h1>
+    <div id="working_area" class="flex-grow-1 p-5 rounded border" style="min-height: 80vh;">
+
+        <!--  CONTENT      -->
+        <form id="form_main_content" action="#" th:action="@{/admin/users/update}" th:object="${formObject}"
+              method="POST">
+            <div class="input-group mb-3">
+                <input th:field="*{id}" type="text" class="form-control" id="wl-id" name="wl-id"
+                       placeholder="id" required readonly hidden>
+            </div>
+            <div class="input-group mb-3">
+                <input th:field="*{username}" type="text" class="form-control" id="wl-username" name="wl-username"
+                       placeholder="username" required readonly hidden>
+            </div>
+
+            <div class="input-group mb-3">
+                                    <span class="input-group-text" id="name-icon">
+                                        <i class="fa-solid fa-user"></i>
+                                    </span>
+                <input th:field="*{name}" type="text" class="form-control" id="wl-name" name="wl-name"
+                       placeholder="name" required>
+            </div>
+
+            <div class="input-group mb-3">
+                                    <span class="input-group-text" id="surname-icon">
+                                       <i class="fa-solid fa-users"></i>
+                                    </span>
+                <input th:field="*{surname}" type="text" class="form-control" id="wl_surname"
+                       name="wl_surname"
+                       placeholder="surname" required>
+            </div>
+
+            <div class="input-group mb-3">
+                                    <span class="input-group-text" id="email-icon">
+                                        <i class="fa-solid fa-envelope"></i>
+                                    </span>
+                <input th:field="*{emailAddress}" type="email" class="form-control" id="wl-email" name="wl-email"
+                       placeholder="email address" required>
+            </div>
+
+            <div class="input-group mb-3">
+
+                <select class="form-select mb-4 col-4" th:field="*{assistantId}">
+                    <option th:each="enumType : ${assistantsEnumList}" th:value="${enumType}"
+                            th:selected="*{assistantId}"
+                            th:text="${enumType}"></option>
+                </select>
+            </div>
+
+            <div class="input-group mb-3">
+
+                <select class="form-select mb-4 col-4" th:field="*{roles}">
+                    <option th:each="enumType : ${enumList}" th:value="${enumType}"
+                            th:text="${enumType}"></option>
+                </select>
+            </div>
+
+            <div class="input-group mb-3" sec:authorize="hasRole('ADMIN')">
+                <div class="form-check">
+                    <input th:field="*{disabled}" class="form-check-input" type="checkbox" value="" id="wl-disabled">
+                    <label class="form-check-label" for="wl-disabled">
+                        Disabled
+                    </label>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center">
+                <!-- Left-aligned button -->
+                <a th:href="@{/admin/users}" class="btn btn-outline-secondary justify-content-end">
+                    <span></span> Cancel
+                </a>
+                <!-- Right-aligned button -->
+                <button id="form_main_submit_button" type="button" class="btn btn-outline-success justify-content-end"
+                        onclick="disableButton()">
+                        <span id="form_main_submit_spinner" class="spinner-border spinner-border-sm d-none"
+                              role="status"
+                              aria-hidden="true"></span>
+                    <span id="form_main_submit_icon"><i class="fa-solid fa-floppy-disk"></i></span>
+                </button>
+            </div>
+        </form>
+
+    </div>
+</main>
+
+
+<custom th:insert="~{_base.html :: _bootstrap_js}"></custom>
+<script th:src="@{/js/form_control.js}"></script>
+</body>
+</html>

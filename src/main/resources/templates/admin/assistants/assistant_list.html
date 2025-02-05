@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <head th:insert="~{_base.html :: _head}"></head>
+    <link rel="stylesheet" th:href="@{/css/datatables.min.css}">
+    <script th:src="@{/js/datatables.min.js}"></script>
+</head>
+<body>
+<custom th:insert="~{_base.html :: _navbar}"></custom>
+
+<!--Main Content Section-->
+<main id="main" class="main container d-flex flex-column">
+
+    <custom th:insert="~{_base.html :: _alert}"></custom>
+
+    <h1 class="text-center">Assistants Management</h1>
+    <div id="working_area" class="flex-grow-1 p-5 rounded border" style="min-height: 80vh;">
+
+        <!--  CONTENT      -->
+        <div class="d-flex justify-content-end mb-3">
+            <a th:href="@{/admin/assistants/insert}" class="btn btn-sm btn-outline-success">Add</a>
+        </div>
+
+        <div class="table-responsive">
+
+            <table class="table table-striped table-sm" id="table">
+                <thead class="table-dark">
+                <tr>
+                    <th></th>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Additional Instructions</th>
+                    <th>Disabled</th>
+
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="item : ${recordList}">
+                    <td>
+                        <a th:href="@{/admin/assistants/update(id=${item.id})}"
+                           class="btn btn-outline-secondary btn-sm"><i class="fa-solid fa-pencil"></i></a>
+                    </td>
+                    <td th:text="${item.name}"></td>
+                    <td th:text="${item.description}"></td>
+                    <td th:text="${item.additionalInstructions}"></td>
+                    <td th:text="${item.disabled}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+
+<custom th:insert="~{_base.html :: _bootstrap_js}"></custom>
+<script th:src="@{/js/table.js}"></script>
+</body>
+</html>

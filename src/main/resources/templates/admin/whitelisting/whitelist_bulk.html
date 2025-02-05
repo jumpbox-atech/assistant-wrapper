@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <head th:insert="~{_base.html :: _head}"></head>
+    <link rel="stylesheet" th:href="@{/css/datatables.min.css}">
+    <script th:src="@{/js/datatables.min.js}"></script>
+</head>
+<body>
+<custom th:insert="~{_base.html :: _navbar}"></custom>
+
+<!--Main Content Section-->
+<main id="main" class="main container d-flex flex-column">
+
+    <custom th:insert="~{_base.html :: _alert}"></custom>
+
+    <h1 class="text-center">Whitelisting Management</h1>
+    <div id="working_area" class="flex-grow-1 p-5 rounded border" style="min-height: 80vh;">
+
+        <!--  CONTENT      -->
+        <div class="row justify-content-center">
+            <div class="col-md-5">
+
+                <p>This operation has little data validation. The csv document should have the content in the following
+                    order:</p>
+
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered border-secondary">
+                        <tr>
+                            <th>username</th>
+                            <th>name</th>
+                            <th>surname</th>
+                            <th>email</th>
+                            <th>assistant</th>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    </table>
+                </div>
+                <br/>
+                <p>Once the file is uploaded, the process will start.</p>
+                <p>On completion, an email will be sent with the results of the operation.</p>
+
+                <br/>
+                <form id="form_main_content" method="POST" th:action="@{/admin/whitelist/insert/bulk}"
+                      enctype="multipart/form-data">
+
+                    <label for="csvFile" class="form-label">Please upload a file to continue</label>
+
+                    <div class="input-group mb-3">
+                        <input type="file"
+                               class="form-control"
+                               id="csvFile"
+                               name="formObject"
+                               accept=".csv" required>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <!-- Left-aligned button -->
+                        <a th:href="@{/admin/whitelist}" class="btn btn-outline-secondary justify-content-end">
+                            <span></span> Cancel
+                        </a>
+                        <!-- Right-aligned button -->
+                        <button id="form_main_submit_button" type="button" class="btn btn-outline-success ms-2"
+                                onclick="disableButton()">
+                                <span id="form_main_submit_spinner" class="spinner-border spinner-border-sm d-none"
+                                      role="status"
+                                      aria-hidden="true"></span>
+                            <span id="form_main_submit_icon"><i class="fa-solid fa-file-arrow-up"></i></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+
+<custom th:insert="~{_base.html :: _bootstrap_js}"></custom>
+<script th:src="@{/js/form_control.js}"></script>
+
+</body>
+</html>

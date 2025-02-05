@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark" xmlns:th="http://www.thymeleaf.org">
+<head th:insert="~{_public.html :: _head}"></head>
+<body>
+<!--Main Content Section-->
+<main id="main" class="main container d-flex flex-column">
+
+    <div id="working_area" class="flex-grow-1 p-5 rounded" style="min-height: 80vh;">
+
+        <div class="row justify-content-center">
+            <div class="col-md-4">
+                <h1 class="page-error text-center">Forbidden</h1>
+                <p class="text-center">Sorry, you do not have permission to access this resource.</p>
+                <div>
+                    <div class="text-center">
+                        <a th:href="@{/}" class="btn btn-outline-secondary"><span><i
+                                class="fa-solid fa-share"></i></span>
+                            Go Home</a>
+                        <div/>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<custom th:insert="~{_public.html :: _bootstrap_js}"></custom>
+</body>
+</html>

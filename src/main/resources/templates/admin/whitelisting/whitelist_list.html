@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en"
+      data-bs-theme="dark"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+    <head th:insert="~{_base.html :: _head}"></head>
+    <link rel="stylesheet" th:href="@{/css/datatables.min.css}">
+    <script th:src="@{/js/datatables.min.js}"></script>
+</head>
+
+<body>
+<custom th:insert="~{_base.html :: _navbar}"></custom>
+
+<!--Main Content Section-->
+<main id="main" class="main container d-flex flex-column">
+
+    <custom th:insert="~{_base.html :: _alert}"></custom>
+
+    <h1 class="text-center">Registration Whitelisting</h1>
+    <div id="working_area" class="flex-grow-1 p-5 rounded border" style="min-height: 80vh;">
+
+        <!--  CONTENT      -->
+        <div class="d-flex justify-content-end mb-3">
+            <div class="dropdown">
+                <button class="btn btn-outline-success dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                    Add
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#" th:href="@{/admin/whitelist/insert}"><i
+                            class="fas fa-user"></i>
+                        Single</a></li>
+                    <li sec:authorize="hasAnyRole('MANAGER','ADMIN')"><a class="dropdown-item" href="#"
+                                                                         th:href="@{/admin/whitelist/insert/bulk}"><i
+                            class="fas fa-users"></i>
+                        Bulk</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+
+            <table class="table table-striped" id="table">
+                <thead class="table-dark">
+                <tr>
+                    <th></th>
+                    <th>Username</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Assistant</th>
+                    <th>Registered</th>
+
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="item : ${recordList}">
+                    <td>
+                        <div class="table_cell_inline_multi_button">
+                            <a th:if="${!item.registered}" href="#" class="btn btn-outline-danger btn-sm"
+                               th:attr="data-username=${item.username}" onclick="showConfirmationModal(this)">
+                                <i class="fa-solid fa-ban"></i>
+                            </a>
+                            </a>
+                            <a th:if="${!item.registered}" th:href="@{'/admin/whitelist/update/' + ${item.username}}"
+                               class="btn btn-outline-secondary btn-sm"><i class="fa-solid fa-pencil"></i></a>
+                        </div>
+
+                    </td>
+                    <td th:text="${item.username}"></td>
+                    <td th:text="${item.name}"></td>
+                    <td th:text="${item.surname}"></td>
+                    <td th:text="${item.customPropertyA}"></td>
+                    <td th:text="${item.registered}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+
+<custom th:insert="~{_base.html :: _bootstrap_js}"></custom>
+<script th:src="@{/js/table.js}"></script>
+
+<script th:inline="javascript">
+    function showConfirmationModal(button) {
+        var username = button.getAttribute('data-username');
+        var deleteUrl = '/admin/whitelist/delete/' + username;
+        document.getElementById('deleteLink').href = deleteUrl;
+        $('#confirmationModal').modal('show');
+    }
+</script>
+
+<!-- Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmationModalLabel">Confirmation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete this item?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <a id="deleteLink" href="#" class="btn btn-danger">Delete</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
+
+
+
+
+
+

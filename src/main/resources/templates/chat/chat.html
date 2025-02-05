@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark" xmlns:th="http://www.thymeleaf.org">
+<head th:insert="~{_base.html :: _head}">
+</head>
+<body>
+<custom th:insert="~{_base.html :: _navbar}"></custom>
+
+<!--Main Content Section-->
+<main id="main" class="main container d-flex flex-column">
+
+    <custom th:insert="~{_base.html :: _alert}"></custom>
+
+    <div id="working_area" class="flex-grow-1 p-2 rounded " style="min-height: 80vh;">
+
+        <!--HISTORY SECTION-->
+        <div id="chat_history_area" class="chat_history_area">
+            <div th:each="record : ${chatHistory}">
+                <!--User SECTION-->
+                <div th:if="${record.role == 'user'}">
+                    <div id="user_record" class="flex-grow-1 p-3 rounded mt-3" style="color: grey;">
+                        <div>
+                            <img th:src="@{/images/user_24.png}" alt=" "> <strong><span
+                                th:text="${formObject.name}"></span></strong></a>
+                            <div th:utext="${record.text}"></div>
+                        </div>
+                    </div>
+                </div>
+                <!--Assistant SECTION-->
+                <div th:if="${record.role == 'assistant'}">
+                    <div id="assistant_record" class="assistant-record flex-grow-1 p-3 rounded mb-3">
+                        <img th:src="@{/images/robot_24.png}" alt=" "> <span th:text="${formObject.assistant}"></span>
+                        <div th:utext="${record.text}"></div>
+                    </div>
+                </div>
+
+            </div>
+            <!--Assistant SECTION-->
+            <div th:if="${answer}">
+                <div id="assistant_answer_record" class="assistant-record flex-grow-1 p-3 rounded mb-3">
+                    <div>
+                        <img th:src="@{/images/robot_24.png}" alt=" "> <span th:text="${formObject.assistant}"></span>
+                    </div>
+                    <div th:utext="${answer}"></div>
+                </div>
+            </div>
+            <!--Assistant SECTION-->
+            <div th:if="${greeting}">
+                <div id="assistant_greeting" class="assistant-record flex-grow-1 p-3 rounded mb-3">
+                    <div>
+                        <img th:src="@{/images/robot_24.png}" alt=" "> <span th:text="${formObject.assistant}"></span>
+                    </div>
+                    <div th:utext="${greeting}"></div>
+                </div>
+            </div>
+        </div>
+
+        <!--QUESTION SECTION-->
+        <div id="chat_input_area" class="p-1 rounded d-flex align-items-center">
+            <div id="input_row" class="row w-100">
+                <div class="col-2 d-flex align-items-center">
+                    <!-- Column added for spacing -->
+                </div>
+                <div class="col-8">
+                    <form id="form_main_content" th:action="@{/chat/process}" th:object="${formObject}" method="POST">
+                        <!-- Your form fields here -->
+                        <input type="text" class="form-control" th:field="${formObject.username}" readonly hidden>
+                        <input type="text" class="form-control" th:field="${formObject.chatId}" readonly hidden>
+                        <input type="text" class="form-control" th:field="${formObject.description}" readonly hidden>
+                        <input type="text" class="form-control" th:field="${formObject.assistant}" readonly hidden>
+                        <div class="d-flex">
+                                        <textarea id="chat_question"
+                                                  class="form-control flex-grow-1" name="chat_question"
+                                                  rows="3"
+                                                  maxlength="1000"
+                                                  th:field="*{question}" required></textarea>
+
+                            <button id="form_main_submit_button" type="button" class="btn btn-outline-success ms-2"
+                                    onclick="disableButton()">
+                                                    <span id="form_main_submit_spinner"
+                                                          class="spinner-border spinner-border-sm d-none"
+                                                          role="status"
+                                                          aria-hidden="true"></span>
+                                <span id="form_main_submit_icon"><i class="fa-solid fa-paper-plane"></i></span>
+                            </button>
+                        </div>
+                        <div class="align-items-center">
+                            <p class="text-center text-secondary"> You are chatting with
+                                <span th:text="${formObject.assistant}"></span> -
+                                <span id="characterCount" class="text-secondary">1000 of 1000 characters left</span>
+                            </p>
+                        </div>
+                    </form>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+
+<custom th:insert="~{_base.html :: _bootstrap_js}"></custom>
+<script th:src="@{/js/pages/chat.js}"></script>
+<script th:src="@{/js/form_control.js}"></script>
+</body>
+</html>
+

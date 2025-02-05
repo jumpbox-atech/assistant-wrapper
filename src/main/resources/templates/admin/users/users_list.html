@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <head th:insert="~{_base.html :: _head}"></head>
+    <link rel="stylesheet" th:href="@{/css/datatables.min.css}">
+    <script th:src="@{/js/datatables.min.js}"></script>
+</head>
+<body>
+<custom th:insert="~{_base.html :: _navbar}"></custom>
+
+
+<!--Main Content Section-->
+<main id="main" class="main container d-flex flex-column">
+
+    <custom th:insert="~{_base.html :: _alert}"></custom>
+
+    <h1 class="text-center">Users Management</h1>
+    <div id="working_area" class="flex-grow-1 p-5 rounded border" style="min-height: 80vh;">
+
+        <!--  CONTENT      -->
+        <div class="d-flex justify-content-end mb-3">
+            <a th:href="@{/admin/whitelist/add}" class="btn btn-sm btn-outline-secondary disabled">Add</a>
+        </div>
+
+        <div class="table-responsive">
+
+            <table class="table table-striped" id="table">
+                <thead class="table-dark">
+                <tr>
+                    <th></th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Username</th>
+                    <th>Roles</th>
+                    <th>Disabled</th>
+
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="item : ${recordList}">
+                    <td>
+                        <a th:href="@{/admin/users/update(username=${item.username})}"
+                           class="btn btn-outline-secondary btn-sm"><i class="fa-solid fa-pencil"></i></a>
+                    </td>
+                    <td th:text="${item.name}"></td>
+                    <td th:text="${item.surname}"></td>
+                    <td th:text="${item.username}"></td>
+                    <td th:text="${item.roles}"></td>
+                    <td th:text="${item.disabled}"></td>
+                </tr>
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+</main>
+
+
+<custom th:insert="~{_base.html :: _bootstrap_js}"></custom>
+<script th:src="@{/js/table.js}"></script>
+</body>
+</html>

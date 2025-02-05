@@ -1,0 +1,39 @@
+services:
+
+  assistant-db:
+    image: assistant-postgres:latest
+    container_name: assistant-db
+    env_file:
+      - .env
+    environment:
+      - TZ=Africa/Johannesburg
+    volumes:
+      - ./appdata/db:/var/lib/postgresql/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "5432:5432"
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  assistant-app:
+    image: assistant:latest
+    container_name: assistant-app
+    depends_on:
+      - assistant-db
+    env_file:
+      - .env
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "8080:8080"
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+networks:
+  default:
+    name: shared
+    external: false
