@@ -38,7 +38,6 @@ public class ChatController {
     @GetMapping("/chat")
     public String showChatPage(
             Model model,
-            @RequestParam(name = "updated", required = false) String updated,
             RedirectAttributes redirectAttributes) throws GenericException {
         alertList = new ArrayList<>(1);
 
@@ -114,26 +113,21 @@ public class ChatController {
         if (outputTool.getResult().equals(OutputTool.Result.EXCEPTION)) {
             alertList.add(new Alert().build(Alert.AlertType.DANGER, outputTool.getComment()));
             redirectAttributes.addFlashAttribute("alertList", alertList);
-            return "redirect:/chat/list?updated=no";
+            return "redirect:/chat/list?deleted=no";
         }
         alertList.add(new Alert().build(Alert.AlertType.SUCCESS, outputTool.getComment()));
         redirectAttributes.addFlashAttribute("alertList", alertList);
-        return "redirect:/chat/list?updated=true";
+        return "redirect:/chat/list?deleted=true";
     }
 
     @PostMapping("/chat/process")
-    public String processQuestion(
-            Model model,
-            @Validated @ModelAttribute("question") ChatRequestDTO form) throws InterruptedException, JsonProcessingException {
+    public String processQuestion(@Validated @ModelAttribute("question") ChatRequestDTO form) throws InterruptedException, JsonProcessingException {
 
         String loggedInUser = SecurityContextHolder.getContext().getAuthentication().getName();
         String requestReference = loggedInUser + "_" + UUID.randomUUID().toString().replaceAll("-", "");
 
         alertList = new ArrayList<>(1);
-        boolean isNewChat = false;
-        if (form.getChatId() == null || form.getChatId().isBlank()) {
-            isNewChat = true;
-        }
+        boolean isNewChat = form.getChatId() == null || form.getChatId().isBlank();
 
         if (form.getDescription().isBlank()) {
             int sizeOfQuestion = form.getQuestion().length();

@@ -104,8 +104,13 @@ public class ChatService {
         if (chat.isEmpty()) {
             return new OutputTool().build(OutputTool.Result.EXCEPTION, "Unable to find chat with id: " + HelperTools.wrapVar(chatId), null);
         }
-        chat.get().setPurge(true);
-        repoChats.save(chat.get());
+        Optional<ChatsMeta> chatsMeta = repoChatsMeta.findByChatsId(chat.get().getId());
+        Optional<ChatsHistory> chatsHistory = repoChatsHistory.findByChatsId(chat.get().getId());
+
+        repoChats.delete(chat.get());
+        chatsMeta.ifPresent(repoChatsMeta::delete);
+        chatsHistory.ifPresent(repoChatsHistory::delete);
+
         return new OutputTool().build(OutputTool.Result.SUCCESS, "Chat deleted successfully.", null);
     }
 
