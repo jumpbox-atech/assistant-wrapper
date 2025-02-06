@@ -3,6 +3,23 @@
 -- DROP SCHEMA public CASCADE;
 -- CREATE SCHEMA public;
 -- -------------------------------------------
+CREATE TABLE public.organisation
+(
+    id                   serial,
+    masked_id            character varying           NOT NULL,
+    created_datetime     timestamp without time zone NOT NULL,
+    created_by           character varying           NOT NULL,
+    name                 character varying           NOT NULL,
+    disabled             boolean                     NOT NULL,
+    updated_datetime     timestamp without time zone         ,
+    updated_by           character varying                   ,
+    PRIMARY KEY (id)
+);
+
+ALTER TABLE IF EXISTS public.organization
+    OWNER to "postgres_admin";
+
+
 CREATE TABLE public.users
 (
     id                   serial,

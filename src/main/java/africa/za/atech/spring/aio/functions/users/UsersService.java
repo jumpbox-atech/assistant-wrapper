@@ -2,11 +2,11 @@ package africa.za.atech.spring.aio.functions.users;
 
 import africa.za.atech.spring.aio.exceptions.GenericException;
 import africa.za.atech.spring.aio.functions.chats.ChatService;
-import africa.za.atech.spring.aio.functions.users.dto.RegisterDTO;
-import africa.za.atech.spring.aio.functions.users.dto.UserProfileDTO;
-import africa.za.atech.spring.aio.functions.users.dto.WhitelistRegDTO;
+import africa.za.atech.spring.aio.functions.users.dto.*;
+import africa.za.atech.spring.aio.functions.users.model.Organisation;
 import africa.za.atech.spring.aio.functions.users.model.RegistrationWhitelist;
 import africa.za.atech.spring.aio.functions.users.model.Users;
+import africa.za.atech.spring.aio.functions.users.repo.OrganisationRepo;
 import africa.za.atech.spring.aio.functions.users.repo.UsersRepo;
 import africa.za.atech.spring.aio.functions.users.repo.WhitelistRegRepo;
 import africa.za.atech.spring.aio.utils.EmailTools;
@@ -54,10 +54,75 @@ public class UsersService {
 
     private final UsersRepo repoUsers;
     private final WhitelistRegRepo repoWhiteList;
+    private final OrganisationRepo repoOrganisation;
     private final EmailTools emailTools;
     private final ChatService chatService;
 
     private final PasswordEncoder encoder;
+
+    public List<OrganisationDTO> getAllOrganisation() {
+        List<Organisation> organisations = repoOrganisation.findAll();
+        List<OrganisationDTO> out = new ArrayList<>();
+        for (Organisation organisation : organisations) {
+            OrganisationMetaDTO meta = new OrganisationMetaDTO();
+            OrganisationDTO organisationDTO = new OrganisationDTO();
+
+            // TODO: Get List of departments
+            meta.setListOfDepartments(new ArrayList<>());
+            // TODO: Get List of assistants
+            meta.setListOfAssistants(new ArrayList<>());
+            // TODO: Get List of users
+            meta.setListOfUsers(new ArrayList<>());
+            // TODO: Get List of user chats
+            meta.setListOfChats(new ArrayList<>());
+
+            out.add(organisationDTO.build(organisation, meta));
+
+        }
+        return out;
+    }
+
+    public OrganisationDTO getOrganisation(String maskedId) {
+        Optional<Organisation> organisations = repoOrganisation.findAllByMaskedId(maskedId);
+        OrganisationDTO dto = new OrganisationDTO();
+        dto.setName(organisations.get().getName());
+        dto.setMaskedId(organisations.get().getMaskedId());
+        return dto;
+    }
+
+    public OutputTool addOrganisation(String loggedInUser, OrganisationDTO form) {
+        Optional<Organisation> lookup = repoOrganisation.findByNameIgnoreCase(form.getName());
+        if (lookup.isPresent()) {
+            return new OutputTool().build(OutputTool.Result.PROCESS_RULE, "Organisation " + HelperTools.wrapVar(form.getName()) + " already exists.", null);
+        }
+        Organisation record = new Organisation().buildInsert(loggedInUser, form);
+        repoOrganisation.save(record);
+        return new OutputTool().build(OutputTool.Result.SUCCESS, "Organisation added successfully.", new OrganisationDTO().build(record, new OrganisationMetaDTO()));
+    }
+
+    public OutputTool updateOrganisation(String loggedInUser, OrganisationDTO form) {
+        Optional<Organisation> record = repoOrganisation.findAllByMaskedId(form.getMaskedId());
+        if (record.isEmpty()) {
+            return new OutputTool().build(OutputTool.Result.EXCEPTION, "Organisation does not exist.", null);
+        }
+        record.get().setName(form.getName());
+        record.get().setUpdateBy(loggedInUser);
+        record.get().setUpdateDatetime(LocalDateTime.now());
+        repoOrganisation.save(record.get());
+        return new OutputTool().build(OutputTool.Result.SUCCESS, "Organisation updated successfully.", null);
+
+    }
+
+    public OutputTool deleteOrganisation(String loggedInUser, String maskedId) {
+        Optional<Organisation> organisationRecord = repoOrganisation.findAllByMaskedId(maskedId);
+        if (organisationRecord.isEmpty()) {
+            return new OutputTool().build(OutputTool.Result.EXCEPTION, "Organisation does not exist.", null);
+        }
+
+        // TODO: Purge all departments, users and user chats
+        repoOrganisation.delete(organisationRecord.get());
+        return new OutputTool().build(OutputTool.Result.SUCCESS, "Organisation deleted successfully.", null);
+    }
 
     public Users addUser(LocalDateTime createdDateTime,
                          String username,

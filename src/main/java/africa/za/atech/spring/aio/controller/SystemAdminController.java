@@ -7,6 +7,7 @@ import africa.za.atech.spring.aio.functions.users.BulkRegistrationService;
 import africa.za.atech.spring.aio.functions.users.RegType;
 import africa.za.atech.spring.aio.functions.users.SecurityRole;
 import africa.za.atech.spring.aio.functions.users.UsersService;
+import africa.za.atech.spring.aio.functions.users.dto.OrganisationDTO;
 import africa.za.atech.spring.aio.functions.users.dto.UserProfileDTO;
 import africa.za.atech.spring.aio.functions.users.dto.WhitelistRegDTO;
 import africa.za.atech.spring.aio.functions.users.model.RegistrationWhitelist;
@@ -38,6 +39,69 @@ public class SystemAdminController {
 
     @Value("${atech.app.register.type}")
     private String regType;
+
+    @GetMapping(value = {"/admin/organisation"})
+    public String showOrgHome(Model model) {
+        List<OrganisationDTO> recordsList = service.getAllOrganisation();
+        model.addAttribute("recordList", recordsList);
+        return "admin/organisation/organisation_list";
+    }
+
+    @GetMapping(value = {"/admin/organisation/add"})
+    public String showOrgInsertForm(Model model) {
+        model.addAttribute("formObject", new OrganisationDTO());
+        return "admin/organisation/organisation_insert";
+    }
+
+    @PostMapping(value = {"/admin/organisation"})
+    public String processOrgInsertForm(
+            @Validated @ModelAttribute(name = "formObject") OrganisationDTO form,
+            RedirectAttributes redirectAttributes) {
+
+        alertList = new ArrayList<>(1);
+
+        OutputTool outputTool = service.addOrganisation(SecurityContextHolder.getContext().getAuthentication().getName(), form);
+        if (outputTool.getResult().equals(OutputTool.Result.PROCESS_RULE)) {
+            redirectAttributes.addFlashAttribute("alertList", List.of(new Alert().build(Alert.AlertType.DANGER, outputTool.getComment())));
+            return "redirect:/admin/organisation?added=false";
+        }
+        redirectAttributes.addFlashAttribute("alertList", List.of(new Alert().build(Alert.AlertType.SUCCESS, outputTool.getComment())));
+        return "redirect:/admin/organisation?added=true";
+    }
+
+    @GetMapping(value = {"/admin/organisation/update"})
+    public String showOrgUpdateForm(
+            Model model,
+            @RequestParam(name = "id") String maskedId) {
+        model.addAttribute("formObject", service.getOrganisation(maskedId));
+        return "admin/organisation/organisation_update";
+    }
+
+    @PostMapping(value = {"/admin/organisation/update"})
+    public String processOrgUpdateForm(
+            @Validated @ModelAttribute(name = "formObject") OrganisationDTO form,
+            RedirectAttributes redirectAttributes) {
+        OutputTool outputTool = service.updateOrganisation(SecurityContextHolder.getContext().getAuthentication().getName(), form);
+        if (outputTool.getResult().equals(OutputTool.Result.EXCEPTION)) {
+            redirectAttributes.addFlashAttribute("alertList", List.of(new Alert().build(Alert.AlertType.DANGER, outputTool.getComment())));
+            return "redirect:/admin/organisation?updated=false";
+        }
+        redirectAttributes.addFlashAttribute("alertList", List.of(new Alert().build(Alert.AlertType.SUCCESS, outputTool.getComment())));
+        return "redirect:/admin/organisation?updated=true";
+    }
+
+    @GetMapping(value = {"/admin/organisation/delete/{id}"})
+    public String processOrgDelete(@PathVariable(name = "id") String maskedId, RedirectAttributes redirectAttributes) {
+        OutputTool outputTool = service.deleteOrganisation(SecurityContextHolder.getContext().getAuthentication().getName(), maskedId);
+        redirectAttributes.addFlashAttribute("recordList", service.getAllOrganisation());
+        if (!outputTool.getResult().equals(OutputTool.Result.SUCCESS)) {
+            redirectAttributes.addFlashAttribute("alertList", List.of(new Alert().build(Alert.AlertType.DANGER, outputTool.getComment())));
+            return "redirect:/admin/organisation?deleted=false";
+        }
+        redirectAttributes.addFlashAttribute("alertList", List.of(new Alert().build(Alert.AlertType.SUCCESS, outputTool.getComment())));
+        return "redirect:/admin/organisation?deleted=true";
+    }
+
 
     @GetMapping(value = {"/admin/users"})
     public String showUserHome(Model model) {
@@ -252,7 +316,6 @@ public class SystemAdminController {
 
     @PostMapping(value = {"/admin/whitelist/update"})
     public String processWhitelistUpdateForm(
-            Model model,
             @Validated @ModelAttribute(name = "formObject") WhitelistRegDTO form,
             RedirectAttributes redirectAttributes) {
         alertList = new ArrayList<>(1);
@@ -299,7 +362,6 @@ public class SystemAdminController {
 
     @PostMapping("/admin/whitelist/insert/bulk")
     public String handleFileUpload(
-            Model model,
             @RequestParam("formObject") MultipartFile file,
             RedirectAttributes redirectAttributes) {
         log.info("File received with name: {} and content type: {}", file.getOriginalFilename(), file.getContentType());
