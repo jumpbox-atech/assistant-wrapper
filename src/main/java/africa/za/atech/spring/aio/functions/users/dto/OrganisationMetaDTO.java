@@ -7,10 +7,15 @@ import java.util.List;
 @Data
 public class OrganisationMetaDTO {
 
-    private List<String> listOfDepartments;
+    private List<DepartmentDTO> listOfDepartments;
     private List<String> listOfAssistants;
     private List<String> listOfUsers;
     private List<String> listOfChats;
+    private int departmentsCount;
+    private int assistantsCount;
+    private int usersCount;
+    private int chatsCount;
+    private boolean delete;
 
 }
 

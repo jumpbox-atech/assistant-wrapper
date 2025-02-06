@@ -3,9 +3,11 @@ package africa.za.atech.spring.aio.functions.users;
 import africa.za.atech.spring.aio.exceptions.GenericException;
 import africa.za.atech.spring.aio.functions.chats.ChatService;
 import africa.za.atech.spring.aio.functions.users.dto.*;
+import africa.za.atech.spring.aio.functions.users.model.Department;
 import africa.za.atech.spring.aio.functions.users.model.Organisation;
 import africa.za.atech.spring.aio.functions.users.model.RegistrationWhitelist;
 import africa.za.atech.spring.aio.functions.users.model.Users;
+import africa.za.atech.spring.aio.functions.users.repo.DepartmentRepo;
 import africa.za.atech.spring.aio.functions.users.repo.OrganisationRepo;
 import africa.za.atech.spring.aio.functions.users.repo.UsersRepo;
 import africa.za.atech.spring.aio.functions.users.repo.WhitelistRegRepo;
@@ -55,45 +57,47 @@ public class UsersService {
     private final UsersRepo repoUsers;
     private final WhitelistRegRepo repoWhiteList;
     private final OrganisationRepo repoOrganisation;
+    private final DepartmentRepo repoDepartment;
     private final EmailTools emailTools;
     private final ChatService chatService;
 
     private final PasswordEncoder encoder;
 
     public List<OrganisationDTO> getAllOrganisation() {
-        List<Organisation> organisations = repoOrganisation.findAll();
-        List<OrganisationDTO> out = new ArrayList<>();
-        for (Organisation organisation : organisations) {
-            OrganisationMetaDTO meta = new OrganisationMetaDTO();
-            OrganisationDTO organisationDTO = new OrganisationDTO();
-
-            // TODO: Get List of departments
-            meta.setListOfDepartments(new ArrayList<>());
-            // TODO: Get List of assistants
-            meta.setListOfAssistants(new ArrayList<>());
-            // TODO: Get List of users
-            meta.setListOfUsers(new ArrayList<>());
-            // TODO: Get List of user chats
-            meta.setListOfChats(new ArrayList<>());
-
-            out.add(organisationDTO.build(organisation, meta));
-
-        }
-        return out;
+        return repoOrganisation.findAll()
+                .stream()
+                .map(this::getOrganisation)
+                .toList();
     }
 
-    public OrganisationDTO getOrganisation(String maskedId) {
-        Optional<Organisation> organisations = repoOrganisation.findAllByMaskedId(maskedId);
-        OrganisationDTO dto = new OrganisationDTO();
-        dto.setName(organisations.get().getName());
-        dto.setMaskedId(organisations.get().getMaskedId());
-        return dto;
+    public OrganisationDTO getOrganisation(String organisationId) {
+        return getOrganisation(repoOrganisation.findAllByMaskedId(organisationId).get());
+    }
+
+    private OrganisationDTO getOrganisation(Organisation record) {
+        OrganisationMetaDTO meta = new OrganisationMetaDTO();
+        meta.setListOfDepartments(repoDepartment.findAllByOrganisationId(record.getId())
+                .stream()
+                .map(department -> new DepartmentDTO().build(record, department))
+                .toList());
+        meta.setListOfAssistants(new ArrayList<>());
+        meta.setListOfUsers(new ArrayList<>());
+        meta.setListOfChats(new ArrayList<>());
+        meta.setDepartmentsCount(meta.getListOfDepartments().size());
+        meta.setAssistantsCount(meta.getListOfAssistants().size());
+        meta.setUsersCount(meta.getListOfUsers().size());
+        meta.setChatsCount(meta.getListOfChats().size());
+
+        if (meta.getDepartmentsCount() == 0 && meta.getAssistantsCount() == 0 && meta.getUsersCount() == 0) {
+            meta.setDelete(true);
+        }
+        return new OrganisationDTO().build(record, meta);
     }
 
     public OutputTool addOrganisation(String loggedInUser, OrganisationDTO form) {
         Optional<Organisation> lookup = repoOrganisation.findByNameIgnoreCase(form.getName());
         if (lookup.isPresent()) {
-            return new OutputTool().build(OutputTool.Result.PROCESS_RULE, "Organisation " + HelperTools.wrapVar(form.getName()) + " already exists.", null);
+            return new OutputTool().build(OutputTool.Result.EXCEPTION, "Organisation " + HelperTools.wrapVar(form.getName()) + " already exists.", null);
         }
         Organisation record = new Organisation().buildInsert(loggedInUser, form);
         repoOrganisation.save(record);
@@ -101,6 +105,10 @@ public class UsersService {
     }
 
     public OutputTool updateOrganisation(String loggedInUser, OrganisationDTO form) {
+        Optional<Organisation> lookup = repoOrganisation.findByName(form.getName());
+        if (lookup.isPresent()) {
+            return new OutputTool().build(OutputTool.Result.EXCEPTION, "Organisation " + HelperTools.wrapVar(form.getName()) + " already exists.", null);
+        }
         Optional<Organisation> record = repoOrganisation.findAllByMaskedId(form.getMaskedId());
         if (record.isEmpty()) {
             return new OutputTool().build(OutputTool.Result.EXCEPTION, "Organisation does not exist.", null);
@@ -118,10 +126,55 @@ public class UsersService {
         if (organisationRecord.isEmpty()) {
             return new OutputTool().build(OutputTool.Result.EXCEPTION, "Organisation does not exist.", null);
         }
-
-        // TODO: Purge all departments, users and user chats
         repoOrganisation.delete(organisationRecord.get());
         return new OutputTool().build(OutputTool.Result.SUCCESS, "Organisation deleted successfully.", null);
+    }
+
+    public OutputTool addDepartmentForOrg(String loggedInUser, DepartmentDTO form) {
+        Optional<Organisation> orgRecord = repoOrganisation.findAllByMaskedId(form.getOrganisationMaskedId());
+        List<Department> existingDepartments = repoDepartment.findAllByOrganisationId(orgRecord.get().getId());
+        if (!existingDepartments.isEmpty()) {
+            for (Department d : existingDepartments) {
+                if (d.getName().equalsIgnoreCase(form.getName())) {
+                    return new OutputTool().build(OutputTool.Result.PROCESS_RULE, "Department " + HelperTools.wrapVar(form.getName()) + " already exists for the '" + form.getOrganisationName() + "' organisation.", null);
+                }
+            }
+        }
+        Department record = new Department().buildInsert(loggedInUser, orgRecord.get().getId(), form);
+        repoDepartment.save(record);
+        return new OutputTool().build(OutputTool.Result.SUCCESS, "Department added successfully to the '" + record.getName() + "' organisation.", null);
+    }
+
+    public DepartmentDTO getDepartment(String loggedInUser, String maskedId) {
+        Department departmentRecord = repoDepartment.findByMaskedId(maskedId).get();
+        Organisation orgRecord = repoOrganisation.findById(departmentRecord.getOrganisationId()).get();
+        return new DepartmentDTO().build(orgRecord, departmentRecord);
+    }
+
+    public OutputTool updateDepartmentForOrg(String loggedInUser, DepartmentDTO form) {
+        Optional<Organisation> orgRecord = repoOrganisation.findAllByMaskedId(form.getOrganisationMaskedId());
+        List<Department> existingDepartments = repoDepartment.findAllByOrganisationId(orgRecord.get().getId());
+        if (!existingDepartments.isEmpty()) {
+            for (Department d : existingDepartments) {
+                if (d.getName().equals(form.getName())) {
+                    return new OutputTool().build(OutputTool.Result.EXCEPTION, "Department " + HelperTools.wrapVar(form.getName()) + " already exists for the '" + form.getOrganisationName() + "' organisation.", null);
+                }
+            }
+        }
+        Optional<Department> record = repoDepartment.findByMaskedId(form.getMaskedId());
+        if (record.isEmpty()) {
+            return new OutputTool().build(OutputTool.Result.EXCEPTION, "Department does not exist.", null);
+        }
+        record.get().setName(form.getName());
+        record.get().setUpdateBy(loggedInUser);
+        record.get().setUpdateDatetime(LocalDateTime.now());
+        repoDepartment.save(record.get());
+        return new OutputTool().build(OutputTool.Result.SUCCESS, "Department updated successfully.", null);
+    }
+
+    public OutputTool deleteDepartmentForOrg(String loggedInUser, String departmentMaskedId) {
+        repoDepartment.deleteAllByMaskedId(departmentMaskedId);
+        return new OutputTool().build(OutputTool.Result.SUCCESS, "Department deleted successfully", null);
     }
 
     public Users addUser(LocalDateTime createdDateTime,

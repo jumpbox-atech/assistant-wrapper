@@ -10,4 +10,6 @@ public interface OrganisationRepo extends ListCrudRepository<Organisation, Long>
     Optional<Organisation> findAllByMaskedId(String maskedId);
 
     Optional<Organisation> findByNameIgnoreCase(String name);
+
+    Optional<Organisation> findByName(String name);
 }

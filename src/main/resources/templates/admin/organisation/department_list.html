@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en"
+      data-bs-theme="dark"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+    <head th:insert="~{_base.html :: _head}"></head>
+    <link rel="stylesheet" th:href="@{/css/datatables.min.css}">
+    <script th:src="@{/js/datatables.min.js}"></script>
+</head>
+
+<body>
+<custom th:insert="~{_base.html :: _navbar}"></custom>
+
+<!--Main Content Section-->
+<main id="main" class="main container d-flex flex-column">
+
+    <custom th:insert="~{_base.html :: _alert}"></custom>
+
+    <h1 class="text-center" th:text="${orgName}"></h1>
+    <h4 class="text-center">Department Management</h4>
+    <div id="working_area" class="flex-grow-1 p-5 rounded border" style="min-height: 80vh;">
+
+        <!--  CONTENT      -->
+        <div class="d-flex justify-content-end mb-3">
+            <a th:href="@{'/admin/department/add/' + ${orgMaskedId}}" class="btn btn-sm btn-outline-success ">Add</a>
+        </div>
+
+        <div class="table-responsive">
+
+            <table class="table table-striped" id="table">
+                <thead class="table-dark">
+                <tr>
+                    <th></th>
+                    <th>Org Name</th>
+                    <th>Name</th>
+                    <th>Created By</th>
+                    <th>Disabled</th>
+
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="item : ${recordList}">
+                    <td>
+                        <div class="table_cell_inline_multi_button">
+                            <a href="#" class="btn btn-outline-danger btn-sm" sec:authorize="hasAnyRole('ADMIN')"
+                               th:attr="data-org-maskedId=${item.organisationMaskedId}, data-dept-maskedId=${item.maskedId}"
+                               onclick="showConfirmationModal(this)">
+                                <i class="fa-solid fa-ban"></i>
+                            </a>
+                            </a>
+                            <a th:href="@{'/admin/department/update/' + ${item.maskedId}}"
+                               class="btn btn-outline-secondary btn-sm"><i class="fa-solid fa-pencil"></i></a>
+                        </div>
+
+                    </td>
+                    <td th:text="${item.organisationName}"></td>
+                    <td th:text="${item.name}"></td>
+                    <td th:text="${item.createdBy}"></td>
+                    <td th:text="${item.disabled}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+
+<custom th:insert="~{_base.html :: _bootstrap_js}"></custom>
+<script th:src="@{/js/table.js}"></script>
+
+<script th:inline="javascript">
+    function showConfirmationModal(button) {
+        var dataOrgMaskedId = button.getAttribute('data-org-maskedId');
+        var dataDeptMaskedId = button.getAttribute('data-dept-maskedId');
+        var deleteUrl = '/admin/department/delete/' + dataOrgMaskedId + '/' + dataDeptMaskedId;
+        document.getElementById('deleteLink').href = deleteUrl;
+        $('#confirmationModal').modal('show');
+    }
+</script>
+
+<!-- Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmationModalLabel">Confirmation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete this department?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <a id="deleteLink" href="#" class="btn btn-danger">Delete</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
+
+
+
+
+
+

@@ -7,14 +7,17 @@ import africa.za.atech.spring.aio.functions.users.BulkRegistrationService;
 import africa.za.atech.spring.aio.functions.users.RegType;
 import africa.za.atech.spring.aio.functions.users.SecurityRole;
 import africa.za.atech.spring.aio.functions.users.UsersService;
+import africa.za.atech.spring.aio.functions.users.dto.DepartmentDTO;
 import africa.za.atech.spring.aio.functions.users.dto.OrganisationDTO;
 import africa.za.atech.spring.aio.functions.users.dto.UserProfileDTO;
 import africa.za.atech.spring.aio.functions.users.dto.WhitelistRegDTO;
 import africa.za.atech.spring.aio.functions.users.model.RegistrationWhitelist;
+import africa.za.atech.spring.aio.functions.users.repo.DepartmentRepo;
 import africa.za.atech.spring.aio.utils.Alert;
 import africa.za.atech.spring.aio.utils.OutputTool;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.text.WordUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -35,6 +38,7 @@ public class SystemAdminController {
     private final UsersService service;
     private final AssistantService assistantService;
     private final BulkRegistrationService bulkRegistrationService;
+    private final DepartmentRepo departmentRepo;
     private List<Alert> alertList;
 
     @Value("${atech.app.register.type}")
@@ -61,12 +65,12 @@ public class SystemAdminController {
         alertList = new ArrayList<>(1);
 
         OutputTool outputTool = service.addOrganisation(SecurityContextHolder.getContext().getAuthentication().getName(), form);
-        if (outputTool.getResult().equals(OutputTool.Result.PROCESS_RULE)) {
+        if (outputTool.getResult().equals(OutputTool.Result.EXCEPTION)) {
             redirectAttributes.addFlashAttribute("alertList", List.of(new Alert().build(Alert.AlertType.DANGER, outputTool.getComment())));
-            return "redirect:/admin/organisation?added=false";
+            return "redirect:/admin/organisation";
         }
         redirectAttributes.addFlashAttribute("alertList", List.of(new Alert().build(Alert.AlertType.SUCCESS, outputTool.getComment())));
-        return "redirect:/admin/organisation?added=true";
+        return "redirect:/admin/organisation";
     }
 
     @GetMapping(value = {"/admin/organisation/update"})
@@ -84,24 +88,86 @@ public class SystemAdminController {
         OutputTool outputTool = service.updateOrganisation(SecurityContextHolder.getContext().getAuthentication().getName(), form);
         if (outputTool.getResult().equals(OutputTool.Result.EXCEPTION)) {
             redirectAttributes.addFlashAttribute("alertList", List.of(new Alert().build(Alert.AlertType.DANGER, outputTool.getComment())));
-            return "redirect:/admin/organisation?updated=false";
+            return "redirect:/admin/organisation";
         }
         redirectAttributes.addFlashAttribute("alertList", List.of(new Alert().build(Alert.AlertType.SUCCESS, outputTool.getComment())));
-        return "redirect:/admin/organisation?updated=true";
+        return "redirect:/admin/organisation";
     }
 
     @GetMapping(value = {"/admin/organisation/delete/{id}"})
     public String processOrgDelete(@PathVariable(name = "id") String maskedId, RedirectAttributes redirectAttributes) {
         OutputTool outputTool = service.deleteOrganisation(SecurityContextHolder.getContext().getAuthentication().getName(), maskedId);
         redirectAttributes.addFlashAttribute("recordList", service.getAllOrganisation());
-        if (!outputTool.getResult().equals(OutputTool.Result.SUCCESS)) {
+        if (outputTool.getResult().equals(OutputTool.Result.EXCEPTION)) {
             redirectAttributes.addFlashAttribute("alertList", List.of(new Alert().build(Alert.AlertType.DANGER, outputTool.getComment())));
-            return "redirect:/admin/organisation?deleted=false";
+            return "redirect:/admin/organisation";
         }
         redirectAttributes.addFlashAttribute("alertList", List.of(new Alert().build(Alert.AlertType.SUCCESS, outputTool.getComment())));
-        return "redirect:/admin/organisation?deleted=true";
+        return "redirect:/admin/organisation";
     }
 
+    @GetMapping(value = {"/admin/department/{id}"})
+    public String showDepartments(@PathVariable(name = "id") String organisationMaskedId, Model model) {
+        OrganisationDTO organisation = service.getOrganisation(organisationMaskedId);
+        model.addAttribute("orgName", WordUtils.capitalizeFully(organisation.getName()));
+        model.addAttribute("orgMaskedId", organisation.getMaskedId());
+        model.addAttribute("recordList", organisation.getOrganisationMetaDTO().getListOfDepartments());
+        return "admin/organisation/department_list";
+    }
+
+    @GetMapping(value = {"/admin/department/add/{id}"})
+    public String showDepartmentForm(@PathVariable(name = "id") String organisationMaskedId, Model model) {
+        OrganisationDTO org = service.getOrganisation(organisationMaskedId);
+        DepartmentDTO form = new DepartmentDTO();
+        form.setOrganisationMaskedId(org.getMaskedId());
+        form.setOrganisationName(org.getName());
+        model.addAttribute("formObject", form);
+        return "admin/organisation/department_insert";
+    }
+
+    @PostMapping(value = {"/admin/department/add"})
+    public String processDepartmentInsertForm(
+            @Validated @ModelAttribute(name = "formObject") DepartmentDTO form,
+            RedirectAttributes redirectAttributes) {
+
+        OutputTool outputTool = service.addDepartmentForOrg(SecurityContextHolder.getContext().getAuthentication().getName(), form);
+        if (outputTool.getResult().equals(OutputTool.Result.PROCESS_RULE)) {
+            redirectAttributes.addFlashAttribute("alertList", List.of(new Alert().build(Alert.AlertType.DANGER, outputTool.getComment())));
+            return "redirect:/admin/department/" + form.getOrganisationMaskedId();
+        }
+        redirectAttributes.addFlashAttribute("alertList", List.of(new Alert().build(Alert.AlertType.SUCCESS, outputTool.getComment())));
+        return "redirect:/admin/department/" + form.getOrganisationMaskedId();
+    }
+
+    @GetMapping(value = {"/admin/department/update/{id}"})
+    public String showDepartmentUpdateForm(@PathVariable(name = "id") String departmentMaskedId, Model model) {
+        DepartmentDTO form = service.getDepartment("", departmentMaskedId);
+        model.addAttribute("formObject", form);
+        return "admin/organisation/department_update";
+    }
+
+    @PostMapping(value = {"/admin/department/update"})
+    public String processDepartmentUpdateForm(
+            @Validated @ModelAttribute(name = "formObject") DepartmentDTO form,
+            RedirectAttributes redirectAttributes) {
+        OutputTool outputTool = service.updateDepartmentForOrg("", form);
+        if (outputTool.getResult().equals(OutputTool.Result.EXCEPTION)) {
+            redirectAttributes.addFlashAttribute("alertList", List.of(new Alert().build(Alert.AlertType.DANGER, outputTool.getComment())));
+            return "redirect:/admin/department/" + form.getOrganisationMaskedId();
+        }
+        redirectAttributes.addFlashAttribute("alertList", List.of(new Alert().build(Alert.AlertType.SUCCESS, outputTool.getComment())));
+        return "redirect:/admin/department/" + form.getOrganisationMaskedId();
+    }
+
+    @GetMapping(value = {"/admin/department/delete/{organisationId}/{id}"})
+    public String processDeleteDepartment(
+            @PathVariable(name = "organisationId") String organisationMaskedId,
+            @PathVariable(name = "id") String departmentMaskedId,
+            RedirectAttributes redirectAttributes) {
+        OutputTool outputTool = service.deleteDepartmentForOrg("", departmentMaskedId);
+        redirectAttributes.addFlashAttribute(List.of(new Alert().build(Alert.AlertType.SUCCESS, outputTool.getComment())));
+        return "redirect:/admin/department/" + organisationMaskedId;
+    }
 
     @GetMapping(value = {"/admin/users"})
     public String showUserHome(Model model) {
