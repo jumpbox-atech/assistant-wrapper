@@ -285,18 +285,20 @@ public class UsersService {
     public List<UserProfileDTO> getProfiles() {
         List<Users> usersList = repoUsers.findAll();
         List<UserProfileDTO> profileDAOList = new ArrayList<>(usersList.size());
-        for (Users dto : usersList) {
-            profileDAOList.add(new UserProfileDTO().build(dto));
+        for (Users record : usersList) {
+            Organisation organisation = repoOrganisation.findById(record.getOrganisationId()).get();
+            profileDAOList.add(new UserProfileDTO().build(organisation.getMaskedId(), record));
         }
         return profileDAOList;
     }
 
     public UserProfileDTO getProfile(String username) throws GenericException {
-        Optional<Users> dto = repoUsers.findByUsernameIgnoreCase(username);
-        if (dto.isEmpty()) {
+        Optional<Users> record = repoUsers.findByUsernameIgnoreCase(username);
+        if (record.isEmpty()) {
             throw new GenericException("User profile does not exist for username: " + username);
         }
-        return new UserProfileDTO().build(dto.get());
+        Organisation organisation = repoOrganisation.findById(record.get().getOrganisationId()).get();
+        return new UserProfileDTO().build(organisation.getMaskedId(), record.get());
     }
 
     public OutputTool updateProfile(UserProfileDTO form) {

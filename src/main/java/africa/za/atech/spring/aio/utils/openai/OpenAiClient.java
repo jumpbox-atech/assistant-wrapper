@@ -29,8 +29,8 @@ public class OpenAiClient {
     private static Map<String, String> setHeaders(String referenceId, Assistants assistant) {
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", MediaType.APPLICATION_JSON_VALUE);
-        headers.put("Authorization", "Bearer " + assistant.getApiKey());
-        headers.put("OpenAI-Organization", assistant.getOpenaiOrganisationId());
+        headers.put("Authorization", "Bearer " + assistant.getExternalApiKey());
+        headers.put("OpenAI-Organization", assistant.getExternalOrganisationId());
         headers.put("OpenAI-Beta", "assistants=v" + openApiAssistantsBetaVersion);
         headers.put("aTech-reference", referenceId);
         // Custom headers
@@ -97,7 +97,7 @@ public class OpenAiClient {
         }
         req.setBaseUri(url);
         req.addHeaders(setHeaders(referenceId, assistant));
-        req.setBody(new RunThreadMessage().build(assistant.getOpenaiAssistantId(), (assistant.getAdditionalInstructions() + " " + additionalInstruction).trim()));
+        req.setBody(new RunThreadMessage().build(assistant.getExternalAssistantId(), (assistant.getAdditionalInstructions() + " " + additionalInstruction).trim()));
 
         Response response;
         if (logoutRunThread) {

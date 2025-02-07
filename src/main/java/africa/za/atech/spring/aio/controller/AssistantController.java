@@ -1,8 +1,10 @@
 package africa.za.atech.spring.aio.controller;
 
+import africa.za.atech.spring.aio.exceptions.GenericException;
 import africa.za.atech.spring.aio.functions.assistant.AssistantService;
-import africa.za.atech.spring.aio.functions.assistant.database.model.Assistants;
 import africa.za.atech.spring.aio.functions.assistant.dto.AssistantDTO;
+import africa.za.atech.spring.aio.functions.users.UsersService;
+import africa.za.atech.spring.aio.functions.users.dto.UserProfileDTO;
 import africa.za.atech.spring.aio.utils.Alert;
 import africa.za.atech.spring.aio.utils.OutputTool;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +19,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -26,19 +27,22 @@ import java.util.List;
 public class AssistantController {
 
     private final AssistantService assistantService;
-    private List<Alert> alertList;
+    private final UsersService usersService;
 
     @GetMapping(value = {"/admin/assistants"})
     public String showAssistantsHome(Model model) {
-
-        List<Assistants> recordsList = assistantService.getAllAssistants();
+        List<AssistantDTO> recordsList = assistantService.getAllAssistantsInfo();
         model.addAttribute("recordList", recordsList);
         return "admin/assistants/assistant_list";
     }
 
     @GetMapping(value = {"/admin/assistants/insert"})
-    public String getAssistantAddForm(Model model) {
+    public String getAssistantAddForm(Model model) throws GenericException {
+        String loggedInUser = SecurityContextHolder.getContext().getAuthentication().getName();
+        UserProfileDTO u = usersService.getProfile(loggedInUser);
+
         AssistantDTO formObject = new AssistantDTO();
+        formObject.setOrganisationMaskedId(u.getOrganisationMaskedId());
         model.addAttribute("formObject", formObject);
         return "admin/assistants/assistant_insert";
     }
@@ -48,39 +52,23 @@ public class AssistantController {
             Model model,
             @Validated @ModelAttribute(name = "formObject") AssistantDTO form,
             RedirectAttributes redirectAttributes) {
-        alertList = new ArrayList<>(1);
 
         String loggedInUser = SecurityContextHolder.getContext().getAuthentication().getName();
-
         OutputTool outputTool = assistantService.insertAssistant(loggedInUser, form);
         if (!outputTool.getResult().equals(OutputTool.Result.SUCCESS)) {
-            alertList.add(new Alert().build(Alert.AlertType.DANGER, outputTool.getComment()));
             model.addAttribute("formObject", form);
-            model.addAttribute("alertList", alertList);
+            model.addAttribute("alertList", new Alert().build(Alert.AlertType.DANGER, outputTool.getComment()));
             return "admin/assistants/assistant_insert";
         }
-        alertList.add(new Alert().build(Alert.AlertType.SUCCESS, outputTool.getComment()));
-        redirectAttributes.addFlashAttribute("alertList", alertList);
+        redirectAttributes.addFlashAttribute("alertList", List.of(new Alert().build(Alert.AlertType.SUCCESS, outputTool.getComment())));
         return "redirect:/admin/assistants?added=true";
     }
 
     @GetMapping(value = {"/admin/assistants/update"})
     public String getAssistantUpdateForm(
-            Model model, @RequestParam(name = "id") long assistantId) {
-        alertList = new ArrayList<>(1);
-
-        Assistants record = (Assistants) assistantService.getAssistant(assistantId).getObject();
-
-        AssistantDTO formObject = new AssistantDTO();
-        formObject.setId(record.getId());
-        formObject.setName(record.getName());
-        formObject.setDescription(record.getDescription());
-        formObject.setAdditionalInstructions(record.getAdditionalInstructions());
-        formObject.setApiKey("masked");
-        formObject.setDisabled(record.isDisabled());
-
+            Model model, @RequestParam(name = "id") String maskedId) {
+        AssistantDTO formObject = (AssistantDTO) assistantService.getAssistant(maskedId).getObject();
         model.addAttribute("formObject", formObject);
-        model.addAttribute("alertList", alertList);
         return "admin/assistants/assistant_update";
     }
 
@@ -89,19 +77,15 @@ public class AssistantController {
             Model model,
             @Validated @ModelAttribute(name = "formObject") AssistantDTO form,
             RedirectAttributes redirectAttributes) {
-        alertList = new ArrayList<>(1);
-
         String loggedInUser = SecurityContextHolder.getContext().getAuthentication().getName();
 
         OutputTool outputTool = assistantService.updateAssistant(loggedInUser, form);
         if (!outputTool.getResult().equals(OutputTool.Result.SUCCESS)) {
-            alertList.add(new Alert().build(Alert.AlertType.DANGER, outputTool.getComment()));
             model.addAttribute("formObject", form);
-            model.addAttribute("alertList", alertList);
+            model.addAttribute("alertList", List.of(new Alert().build(Alert.AlertType.DANGER, outputTool.getComment())));
             return "admin/assistants/assistant_update";
         } else {
-            alertList.add(new Alert().build(Alert.AlertType.SUCCESS, outputTool.getComment()));
-            redirectAttributes.addFlashAttribute("alertList", alertList);
+            redirectAttributes.addFlashAttribute("alertList", List.of(new Alert().build(Alert.AlertType.SUCCESS, outputTool.getComment())));
             return "redirect:/admin/assistants?updated=true";
         }
     }

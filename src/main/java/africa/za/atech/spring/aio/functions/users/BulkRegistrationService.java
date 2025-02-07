@@ -1,7 +1,7 @@
 package africa.za.atech.spring.aio.functions.users;
 
 import africa.za.atech.spring.aio.functions.assistant.AssistantService;
-import africa.za.atech.spring.aio.functions.assistant.database.model.Assistants;
+import africa.za.atech.spring.aio.functions.assistant.dto.AssistantDTO;
 import africa.za.atech.spring.aio.functions.users.dto.BulkRegistrationDTO;
 import africa.za.atech.spring.aio.functions.users.dto.RegisterDTO;
 import africa.za.atech.spring.aio.functions.users.dto.WhitelistRegDTO;
@@ -47,9 +47,9 @@ public class BulkRegistrationService {
         FileUtils.delete(new File(tempFile));
 
         // Validate assistants
-        List<Assistants> assistants = assistantService.getAllAssistants();
+        List<AssistantDTO> assistants = assistantService.getAllAssistantsInfo();
         for (BulkRegistrationDTO dao : registerDAOS) {
-            for (Assistants ass : assistants) {
+            for (AssistantDTO ass : assistants) {
                 if (dao.getAssistantName().equalsIgnoreCase(ass.getName())) {
                     dao.setAssistantNameValidated(true);
                     break;

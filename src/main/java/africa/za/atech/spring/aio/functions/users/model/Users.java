@@ -74,6 +74,10 @@ public class Users {
     @Column(name = "inserted_by_username")
     private String insertedBy;
 
+    // TODO: Need to set org on insert or set to for an unallocated user
+    @Column(name = "organisation_id")
+    private long organisationId;
+
     public Users buildInsert(LocalDateTime createdDateTime,
                              String username,
                              String name,
@@ -102,6 +106,7 @@ public class Users {
         this.customPropertyC = customPropertyC;
         this.customPropertyD = customPropertyD;
         this.insertedBy = insertedBy;
+        this.organisationId = 0L;
         return this;
     }
 }

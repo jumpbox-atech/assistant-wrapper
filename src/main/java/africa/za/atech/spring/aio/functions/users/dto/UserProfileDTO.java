@@ -21,8 +21,10 @@ public class UserProfileDTO {
     private String newPassword;
     private String confirmPassword;
     private String assistantId;
+    private String organisationMaskedId;
+    private String departmentMaskedId;
 
-    public UserProfileDTO build(Users dto) {
+    public UserProfileDTO build(String organisationMaskedId, Users dto) {
         this.id = dto.getId();
         this.createdDateTime = dto.getCreatedDateTime();
         this.username = dto.getUsername();
@@ -36,6 +38,8 @@ public class UserProfileDTO {
         this.newPassword = "";
         this.confirmPassword = "";
         this.assistantId = dto.getCustomPropertyA();
+
+        this.organisationMaskedId = organisationMaskedId;
         return this;
     }
 }

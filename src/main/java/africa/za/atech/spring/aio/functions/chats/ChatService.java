@@ -227,7 +227,7 @@ public class ChatService {
         if (isNewChat) {
             chatRecord = new Chats()
                     .buildInsert(requestTime, REQUEST_REFERENCE, chatRequestDTO.getUsername(), chatRequestDTO.getDescription(),
-                            assistant.getOpenaiAssistantId(), THREAD_ID, FIRST_MESSAGE_ID, LAST_MESSAGE_ID);
+                            assistant.getExternalAssistantId(), THREAD_ID, FIRST_MESSAGE_ID, LAST_MESSAGE_ID);
             repoChats.save(chatRecord);
             repoChatsMeta.save(new ChatsMeta().buildInsert(chatRecord.getId(), finalResponse.getBody().asString()));
             repoChatsHistory.save(new ChatsHistory().buildInsert(chatRecord.getId(), LOCAL_HISTORY));

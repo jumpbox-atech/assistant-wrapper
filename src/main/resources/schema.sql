@@ -56,6 +56,7 @@ CREATE TABLE public.users
     custom_property_c    character varying           NOT NULL,
     custom_property_d    character varying           NOT NULL,
     inserted_by_username character varying           NOT NULL,
+    organisation_id      integer                     NOT NULL,
     PRIMARY KEY (id)
 );
 
@@ -88,21 +89,20 @@ ALTER TABLE IF EXISTS public.registration_whitelist
 
 CREATE TABLE public.assistants
 (
-    id                      serial                      NOT NULL,
-    created_datetime        timestamp without time zone NOT NULL,
-    created_by              character varying           NOT NULL,
-    name                    character varying           NOT NULL,
-    unique_name             character varying           NOT NULL,
-    description             character varying           NOT NULL,
-    additional_instructions character varying                   ,
-    openai_organisation_id  character varying           NOT NULL,
-    openai_assistant_id     character varying           NOT NULL,
-    api_key                 character varying           NOT NULL,
-    disabled                boolean                     NOT NULL,
-    update_datetime         timestamp without time zone,
-    update_by               character varying,
-    disabled_by             character varying,
-    disabled_datetime       timestamp without time zone,
+    id                          serial                      NOT NULL,
+    masked_id                   character varying           NOT NULL,
+    organisation_id             integer                     NOT NULL,
+    created_datetime            timestamp without time zone NOT NULL,
+    created_by                  character varying           NOT NULL,
+    external_type               character varying           NOT NULL,
+    name                        character varying           NOT NULL,
+    description                 character varying           NOT NULL,
+    additional_instructions     character varying                   ,
+    external_organisation_id    character varying           NOT NULL,
+    external_assistant_id       character varying           NOT NULL,
+    external_api_key            character varying           NOT NULL,
+    updated_datetime            timestamp without time zone         ,
+    updated_by                  character varying                   ,
     PRIMARY KEY (id)
 );
 

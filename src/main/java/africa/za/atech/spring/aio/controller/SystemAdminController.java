@@ -3,6 +3,7 @@ package africa.za.atech.spring.aio.controller;
 import africa.za.atech.spring.aio.exceptions.GenericException;
 import africa.za.atech.spring.aio.functions.assistant.AssistantService;
 import africa.za.atech.spring.aio.functions.assistant.database.model.Assistants;
+import africa.za.atech.spring.aio.functions.assistant.dto.AssistantDTO;
 import africa.za.atech.spring.aio.functions.users.BulkRegistrationService;
 import africa.za.atech.spring.aio.functions.users.RegType;
 import africa.za.atech.spring.aio.functions.users.SecurityRole;
@@ -415,7 +416,7 @@ public class SystemAdminController {
 
     @GetMapping(value = {"/admin/whitelist/insert/bulk"})
     public String showWhitelistBulkForm(RedirectAttributes redirectAttributes) {
-        List<Assistants> assistantsList = assistantService.getAllAssistants();
+        List<AssistantDTO> assistantsList = assistantService.getAllAssistants();
         if (assistantsList.isEmpty()) {
             alertList = new ArrayList<>(1);
             alertList.add(new Alert().build(Alert.AlertType.DANGER, "No assistants are captured. Please capture an assistant before whitelisting users."));

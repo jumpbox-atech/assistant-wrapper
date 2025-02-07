@@ -17,6 +17,11 @@
         <form id="form_main_content" action="#" th:action="@{/admin/assistants}" th:object="${formObject}"
               method="POST">
             <div class="input-group mb-3">
+                <input th:field="*{organisationMaskedId}" type="text" class="form-control" id="wlo-id" name="wlo-id"
+                       placeholder="id" required readonly hidden>
+            </div>
+
+            <div class="input-group mb-3">
                 <span class="input-group-text" id="name-icon">
                     <i class="fa-solid fa-comment-dots"></i>
                 </span>
@@ -37,7 +42,7 @@
                                     <span class="input-group-text" id="organisationId-icon">
                                        <i class="fa-solid fa-building"></i>
                                     </span>
-                <input th:field="*{organisationId}" type="text" class="form-control" id="wl-organisationId"
+                <input th:field="*{externalOrganisationId}" type="text" class="form-control" id="wl-organisationId"
                        name="wl-organisationId"
                        placeholder="openai organisation id" required>
             </div>
@@ -46,7 +51,7 @@
                                     <span class="input-group-text" id="assistantId-icon">
                                        <i class="fa-solid fa-robot"></i>
                                     </span>
-                <input th:field="*{assistantId}" type="text" class="form-control" id="wl-assistantId"
+                <input th:field="*{externalAssistantId}" type="text" class="form-control" id="wl-assistantId"
                        name="wl-assistantId"
                        placeholder="openai assistant id" required>
             </div>
@@ -55,7 +60,7 @@
                                     <span class="input-group-text" id="apiKey-icon">
                                        <i class="fa-solid fa-key"></i>
                                     </span>
-                <input th:field="*{apiKey}" type="text" class="form-control" id="wl-apiKey" name="wl-apiKey"
+                <input th:field="*{externalApiKey}" type="text" class="form-control" id="wl-apiKey" name="wl-apiKey"
                        placeholder="openai assistant api key" required>
             </div>
 

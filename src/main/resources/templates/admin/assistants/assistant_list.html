@@ -27,23 +27,23 @@
                 <thead class="table-dark">
                 <tr>
                     <th></th>
+                    <th>Organisation</th>
                     <th>Name</th>
                     <th>Description</th>
                     <th>Additional Instructions</th>
-                    <th>Disabled</th>
 
                 </tr>
                 </thead>
                 <tbody>
                 <tr th:each="item : ${recordList}">
                     <td>
-                        <a th:href="@{/admin/assistants/update(id=${item.id})}"
+                        <a th:href="@{/admin/assistants/update(id=${item.maskedId})}"
                            class="btn btn-outline-secondary btn-sm"><i class="fa-solid fa-pencil"></i></a>
                     </td>
+                    <td th:text="${item.organisationName}"></td>
                     <td th:text="${item.name}"></td>
                     <td th:text="${item.description}"></td>
                     <td th:text="${item.additionalInstructions}"></td>
-                    <td th:text="${item.disabled}"></td>
                 </tr>
                 </tbody>
             </table>
