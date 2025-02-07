@@ -9,6 +9,8 @@ public interface UsersRepo extends ListCrudRepository<Users, Long> {
 
     Optional<Users> findByUsernameIgnoreCase(String username);
 
-    Optional<Users> findAllByMaskedId(String maskedId);
+    Optional<Users> findByUid(String maskedId);
+
+    Optional<Users> findByOrganisationUidAndUsernameIgnoreCase(String organisationUuid, String username);
 
 }

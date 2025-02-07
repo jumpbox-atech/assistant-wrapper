@@ -6,7 +6,6 @@ import africa.za.atech.spring.aio.functions.assistant.database.repo.RepoAssistan
 import africa.za.atech.spring.aio.functions.assistant.dto.AssistantDTO;
 import africa.za.atech.spring.aio.functions.users.model.Organisation;
 import africa.za.atech.spring.aio.functions.users.repo.OrganisationRepo;
-import africa.za.atech.spring.aio.functions.users.repo.UsersRepo;
 import africa.za.atech.spring.aio.utils.HelperTools;
 import africa.za.atech.spring.aio.utils.OutputTool;
 import lombok.RequiredArgsConstructor;
@@ -25,8 +24,6 @@ public class AssistantService {
 
     private final OrganisationRepo repoOrganisation;
     private final RepoAssistants repoAssistants;
-
-    private final UsersRepo repoUsers;
 
     public List<AssistantDTO> getAllAssistants() {
         return repoAssistants.findAll()
@@ -64,7 +61,7 @@ public class AssistantService {
     }
 
     public OutputTool insertAssistant(String loggedInUser, AssistantDTO form) {
-        Organisation organisation = repoOrganisation.findAllByMaskedId(form.getOrganisationMaskedId()).get();
+        Organisation organisation = repoOrganisation.findByUid(form.getOrganisationUid()).get();
         Optional<Assistants> lookup = repoAssistants.findByOrganisationIdAndNameIgnoreCase(organisation.getId(), form.getName());
         if (lookup.isPresent()) {
             return new OutputTool().build(OutputTool.Result.EXCEPTION,
@@ -76,10 +73,10 @@ public class AssistantService {
     }
 
     public OutputTool updateAssistant(String loggedInUser, AssistantDTO form) {
-        Organisation organisation = repoOrganisation.findAllByMaskedId(form.getOrganisationMaskedId()).get();
+        Organisation organisation = repoOrganisation.findByUid(form.getOrganisationUid()).get();
 
 
-        Optional<Assistants> lookup = repoAssistants.findByOrganisationIdAndMaskedId(organisation.getId(), form.getMaskedId());
+        Optional<Assistants> lookup = repoAssistants.findByOrganisationIdAndMaskedId(organisation.getId(), form.getUid());
         if (lookup.isEmpty()) {
             return new OutputTool().build(OutputTool.Result.EXCEPTION,
                     "Assistant " + HelperTools.wrapVar(form.getName()) + " does not exists for the '" + organisation.getName() + "' organisation.", null);

@@ -1,6 +1,5 @@
 package africa.za.atech.spring.aio.controller;
 
-import africa.za.atech.spring.aio.exceptions.GenericException;
 import africa.za.atech.spring.aio.functions.assistant.AssistantService;
 import africa.za.atech.spring.aio.functions.assistant.database.model.Assistants;
 import africa.za.atech.spring.aio.functions.assistant.dto.AssistantDTO;
@@ -13,8 +12,8 @@ import africa.za.atech.spring.aio.functions.users.dto.OrganisationDTO;
 import africa.za.atech.spring.aio.functions.users.dto.UserProfileDTO;
 import africa.za.atech.spring.aio.functions.users.dto.WhitelistRegDTO;
 import africa.za.atech.spring.aio.functions.users.model.RegistrationWhitelist;
-import africa.za.atech.spring.aio.functions.users.repo.DepartmentRepo;
 import africa.za.atech.spring.aio.utils.Alert;
+import africa.za.atech.spring.aio.utils.HelperTools;
 import africa.za.atech.spring.aio.utils.OutputTool;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Slf4j
@@ -39,7 +39,6 @@ public class SystemAdminController {
     private final UsersService service;
     private final AssistantService assistantService;
     private final BulkRegistrationService bulkRegistrationService;
-    private final DepartmentRepo departmentRepo;
     private List<Alert> alertList;
 
     @Value("${atech.app.register.type}")
@@ -65,7 +64,7 @@ public class SystemAdminController {
 
         alertList = new ArrayList<>(1);
 
-        OutputTool outputTool = service.addOrganisation(SecurityContextHolder.getContext().getAuthentication().getName(), form);
+        OutputTool outputTool = service.addOrganisation(form);
         if (outputTool.getResult().equals(OutputTool.Result.EXCEPTION)) {
             redirectAttributes.addFlashAttribute("alertList", List.of(new Alert().build(Alert.AlertType.DANGER, outputTool.getComment())));
             return "redirect:/admin/organisation";
@@ -86,7 +85,7 @@ public class SystemAdminController {
     public String processOrgUpdateForm(
             @Validated @ModelAttribute(name = "formObject") OrganisationDTO form,
             RedirectAttributes redirectAttributes) {
-        OutputTool outputTool = service.updateOrganisation(SecurityContextHolder.getContext().getAuthentication().getName(), form);
+        OutputTool outputTool = service.updateOrganisation(form);
         if (outputTool.getResult().equals(OutputTool.Result.EXCEPTION)) {
             redirectAttributes.addFlashAttribute("alertList", List.of(new Alert().build(Alert.AlertType.DANGER, outputTool.getComment())));
             return "redirect:/admin/organisation";
@@ -97,7 +96,7 @@ public class SystemAdminController {
 
     @GetMapping(value = {"/admin/organisation/delete/{id}"})
     public String processOrgDelete(@PathVariable(name = "id") String maskedId, RedirectAttributes redirectAttributes) {
-        OutputTool outputTool = service.deleteOrganisation(SecurityContextHolder.getContext().getAuthentication().getName(), maskedId);
+        OutputTool outputTool = service.deleteOrganisation(maskedId);
         redirectAttributes.addFlashAttribute("recordList", service.getAllOrganisation());
         if (outputTool.getResult().equals(OutputTool.Result.EXCEPTION)) {
             redirectAttributes.addFlashAttribute("alertList", List.of(new Alert().build(Alert.AlertType.DANGER, outputTool.getComment())));
@@ -111,7 +110,7 @@ public class SystemAdminController {
     public String showDepartments(@PathVariable(name = "id") String organisationMaskedId, Model model) {
         OrganisationDTO organisation = service.getOrganisation(organisationMaskedId);
         model.addAttribute("orgName", WordUtils.capitalizeFully(organisation.getName()));
-        model.addAttribute("orgMaskedId", organisation.getMaskedId());
+        model.addAttribute("orgMaskedId", organisation.getUid());
         model.addAttribute("recordList", organisation.getOrganisationMetaDTO().getListOfDepartments());
         return "admin/organisation/department_list";
     }
@@ -120,7 +119,7 @@ public class SystemAdminController {
     public String showDepartmentForm(@PathVariable(name = "id") String organisationMaskedId, Model model) {
         OrganisationDTO org = service.getOrganisation(organisationMaskedId);
         DepartmentDTO form = new DepartmentDTO();
-        form.setOrganisationMaskedId(org.getMaskedId());
+        form.setOrganisationUid(org.getUid());
         form.setOrganisationName(org.getName());
         model.addAttribute("formObject", form);
         return "admin/organisation/department_insert";
@@ -131,18 +130,18 @@ public class SystemAdminController {
             @Validated @ModelAttribute(name = "formObject") DepartmentDTO form,
             RedirectAttributes redirectAttributes) {
 
-        OutputTool outputTool = service.addDepartmentForOrg(SecurityContextHolder.getContext().getAuthentication().getName(), form);
+        OutputTool outputTool = service.addDepartmentForOrg(form);
         if (outputTool.getResult().equals(OutputTool.Result.PROCESS_RULE)) {
             redirectAttributes.addFlashAttribute("alertList", List.of(new Alert().build(Alert.AlertType.DANGER, outputTool.getComment())));
-            return "redirect:/admin/department/" + form.getOrganisationMaskedId();
+            return "redirect:/admin/department/" + form.getOrganisationUid();
         }
         redirectAttributes.addFlashAttribute("alertList", List.of(new Alert().build(Alert.AlertType.SUCCESS, outputTool.getComment())));
-        return "redirect:/admin/department/" + form.getOrganisationMaskedId();
+        return "redirect:/admin/department/" + form.getOrganisationUid();
     }
 
     @GetMapping(value = {"/admin/department/update/{id}"})
     public String showDepartmentUpdateForm(@PathVariable(name = "id") String departmentMaskedId, Model model) {
-        DepartmentDTO form = service.getDepartment("", departmentMaskedId);
+        DepartmentDTO form = service.getDepartment(departmentMaskedId);
         model.addAttribute("formObject", form);
         return "admin/organisation/department_update";
     }
@@ -151,13 +150,13 @@ public class SystemAdminController {
     public String processDepartmentUpdateForm(
             @Validated @ModelAttribute(name = "formObject") DepartmentDTO form,
             RedirectAttributes redirectAttributes) {
-        OutputTool outputTool = service.updateDepartmentForOrg("", form);
+        OutputTool outputTool = service.updateDepartmentForOrg(form);
         if (outputTool.getResult().equals(OutputTool.Result.EXCEPTION)) {
             redirectAttributes.addFlashAttribute("alertList", List.of(new Alert().build(Alert.AlertType.DANGER, outputTool.getComment())));
-            return "redirect:/admin/department/" + form.getOrganisationMaskedId();
+            return "redirect:/admin/department/" + form.getOrganisationUid();
         }
         redirectAttributes.addFlashAttribute("alertList", List.of(new Alert().build(Alert.AlertType.SUCCESS, outputTool.getComment())));
-        return "redirect:/admin/department/" + form.getOrganisationMaskedId();
+        return "redirect:/admin/department/" + form.getOrganisationUid();
     }
 
     @GetMapping(value = {"/admin/department/delete/{organisationId}/{id}"})
@@ -165,55 +164,45 @@ public class SystemAdminController {
             @PathVariable(name = "organisationId") String organisationMaskedId,
             @PathVariable(name = "id") String departmentMaskedId,
             RedirectAttributes redirectAttributes) {
-        OutputTool outputTool = service.deleteDepartmentForOrg("", departmentMaskedId);
+        OutputTool outputTool = service.deleteDepartmentForOrg(departmentMaskedId);
         redirectAttributes.addFlashAttribute(List.of(new Alert().build(Alert.AlertType.SUCCESS, outputTool.getComment())));
         return "redirect:/admin/department/" + organisationMaskedId;
     }
 
     @GetMapping(value = {"/admin/users"})
     public String showUserHome(Model model) {
-        String loggedInRole = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
-        String loggedInUser = SecurityContextHolder.getContext().getAuthentication().getName();
+        UserProfileDTO loggedInUser = service.getProfile(HelperTools.getLoggedInUsername());
         List<UserProfileDTO> recordsList = service.getProfiles();
-        model.addAttribute("recordList", recordsList);
 
-        if (!loggedInRole.contains("ADMIN")) {
-            int admin = 0;
-            int user = 0;
-            for (int i = 0; i < recordsList.size(); i++) {
-                if (recordsList.get(i).getUsername().equalsIgnoreCase("admin")) {
-                    admin = i;
-                }
-                if (recordsList.get(i).getUsername().equalsIgnoreCase("user")) {
-                    user = i;
-                }
-            }
-            recordsList.remove(admin);
-            recordsList.remove(user);
+        if (loggedInUser.getRoles().equalsIgnoreCase(SecurityRole.MANAGER.getValue())) {
+            recordsList = recordsList.stream()
+                    .filter(dto -> !(dto.getRoles().equalsIgnoreCase(SecurityRole.ORG_ADMIN.getValue()) ||
+                            dto.getRoles().equalsIgnoreCase(SecurityRole.ADMIN.getValue())))
+                    .toList();
         }
+        model.addAttribute("recordList", recordsList);
         return "admin/users/users_list";
     }
 
     @GetMapping(value = {"/admin/users/update"})
     public String showAdminUpdateForm(
             Model model,
-            @RequestParam(name = "username") String username) throws GenericException {
+            @RequestParam(name = "username") String username) {
+        UserProfileDTO loggedInUser = service.getProfile(HelperTools.getLoggedInUsername());
+        List<String> securityRoles = new ArrayList<>(Arrays.stream(SecurityRole.values()).map(SecurityRole::getValue).toList());
+        if (loggedInUser.getRoles().equalsIgnoreCase(SecurityRole.ORG_ADMIN.getValue())) {
+            securityRoles.removeIf(role -> role.equalsIgnoreCase(SecurityRole.ADMIN.getValue()));
+        }
+        model.addAttribute("enumList", securityRoles);
 
         UserProfileDTO profile = service.getProfile(username);
         model.addAttribute("formObject", profile);
 
-        List<String> securityRoles = new ArrayList<>(3);
-        securityRoles.add(SecurityRole.USER.getValue());
-        securityRoles.add(SecurityRole.MANAGER.getValue());
-        securityRoles.add(SecurityRole.ADMIN.getValue());
-        model.addAttribute("enumList", securityRoles);
+        List<String> organisations = service.getAllOrganisation().stream().map(OrganisationDTO::getName).toList();
+        model.addAttribute("orgList", organisations);
 
-        List<Assistants> assistantsList = assistantService.getAllActiveAssistants();
-        List<String> assistantsEnumList = new ArrayList<>(2);
-        for (Assistants s : assistantsList) {
-            assistantsEnumList.add(s.getName());
-        }
-        model.addAttribute("assistantsEnumList", assistantsEnumList);
+        List<String> assistantsList = assistantService.getAllActiveAssistants().stream().map(Assistants::getName).toList();
+        model.addAttribute("assistantsEnumList", assistantsList);
 
         return "admin/users/users_update";
     }
@@ -223,35 +212,27 @@ public class SystemAdminController {
             @Validated @ModelAttribute(name = "formObject") UserProfileDTO form,
             RedirectAttributes redirectAttributes) {
 
-        alertList = new ArrayList<>(1);
-
         // Disable account changes made to own account
-        if (form.getUsername().equalsIgnoreCase(SecurityContextHolder.getContext().getAuthentication().getName())) {
-            alertList.add(new Alert().build(Alert.AlertType.DANGER, "Unable to process action."));
-            redirectAttributes.addFlashAttribute("alertList", alertList);
+        if (form.getUsername().equalsIgnoreCase(HelperTools.getLoggedInUsername())) {
+            redirectAttributes.addFlashAttribute("alertList", List.of(new Alert().build(Alert.AlertType.DANGER, "Unable to process action.")));
             return "redirect:/admin/users?updated=no";
         }
         OutputTool outputTool = service.updateProfile(form);
-        alertList.add(new Alert().build(Alert.AlertType.SUCCESS, outputTool.getComment()));
-        redirectAttributes.addFlashAttribute("alertList", alertList);
-        return "redirect:/admin/users?updated=yes";
+        redirectAttributes.addFlashAttribute("alertList", new Alert().build(Alert.AlertType.SUCCESS, outputTool.getComment()));
+        return "redirect:/admin/users";
     }
 
     @GetMapping("/admin/users/delete/{maskedId}")
     public String deleteChat(
             @PathVariable(name = "maskedId") String maskedId,
             RedirectAttributes redirectAttributes) {
-        String loggedInUser = SecurityContextHolder.getContext().getAuthentication().getName();
-        alertList = new ArrayList<>(1);
 
-        OutputTool outputTool = service.deleteUser(loggedInUser, maskedId);
+        OutputTool outputTool = service.deleteUser(maskedId);
         if (outputTool.getResult().equals(OutputTool.Result.EXCEPTION)) {
-            alertList.add(new Alert().build(Alert.AlertType.DANGER, outputTool.getComment()));
-            redirectAttributes.addFlashAttribute("alertList", alertList);
+            redirectAttributes.addFlashAttribute("alertList", List.of(new Alert().build(Alert.AlertType.DANGER, outputTool.getComment())));
             return "redirect:/admin/users?deleted=false";
         }
-        alertList.add(new Alert().build(Alert.AlertType.SUCCESS, outputTool.getComment()));
-        redirectAttributes.addFlashAttribute("alertList", alertList);
+        redirectAttributes.addFlashAttribute("alertList", List.of(new Alert().build(Alert.AlertType.SUCCESS, outputTool.getComment())));
         return "redirect:/admin/users?deleted=true";
     }
 
@@ -319,7 +300,7 @@ public class SystemAdminController {
             form.setCustomPropertyC("null");
             form.setCustomPropertyD("null");
 
-            OutputTool outputTool = service.addWhitelistEntry(SecurityContextHolder.getContext().getAuthentication().getName(), form);
+            OutputTool outputTool = service.addWhitelistEntry(form);
             if (!outputTool.getResult().equals(OutputTool.Result.SUCCESS)) {
                 alertList.add(new Alert().build(Alert.AlertType.DANGER, outputTool.getComment()));
                 hasErrors = true;
@@ -386,7 +367,7 @@ public class SystemAdminController {
             @Validated @ModelAttribute(name = "formObject") WhitelistRegDTO form,
             RedirectAttributes redirectAttributes) {
         alertList = new ArrayList<>(1);
-        OutputTool outputTool = service.updateWhitelistEntry(SecurityContextHolder.getContext().getAuthentication().getName(), form);
+        OutputTool outputTool = service.updateWhitelistEntry(form);
         alertList.add(new Alert().build(Alert.AlertType.SUCCESS, outputTool.getComment()));
         redirectAttributes.addFlashAttribute("alertList", alertList);
         return "redirect:/admin/whitelist?updated=true";

@@ -46,7 +46,7 @@
                         <a id="org_delete" sec:authorize="hasAnyRole('ADMIN')">
                             <th:block th:if="${item.organisationMetaDTO.isDelete()}">
                                 <a href="#" class="btn btn-outline-danger btn-sm"
-                                   th:attr="field-data=${item.maskedId}" onclick="showConfirmationModal(this)"
+                                   th:attr="field-data=${item.uid}" onclick="showConfirmationModal(this)"
                                    data-bs-toggle="tooltip"
                                    data-bs-delay="50"
                                    data-bs-placement="top"
@@ -54,7 +54,7 @@
                                     <i class="fas fa-ban"></i>
                                 </a>
                             </th:block>
-                            <th:block th:unless="${item.organisationMetaDTO.isDelete()}">
+                            <th:block th:unless="${item.organisationMetaDTO.isDelete}">
                                 <a href="#" class="btn btn-secondary btn-sm disabled"
                                    data-bs-toggle="tooltip"
                                    data-bs-delay="50"
@@ -64,17 +64,17 @@
                                 </a>
                             </th:block>
                         </a>
-                        <a th:href="@{/admin/organisation/update(id=${item.maskedId})}"
+                        <a th:href="@{/admin/organisation/update(id=${item.uid})}"
                            class="btn btn-outline-secondary btn-sm"><i class="fa-solid fa-pencil"></i></a>
-                        <a th:href="@{'/admin/department/' + ${item.maskedId}}"
+                        <a th:href="@{'/admin/department/' + ${item.uid}}"
                            class="btn btn-outline-secondary btn-sm"><i class="fa-solid fa-sitemap"></i></a>
                     </td>
                     <td th:text="${item.name}"></td>
                     <td th:text="${item.createdBy}"></td>
-                    <td th:text="${item.getOrganisationMetaDTO().departmentsCount}"></td>
-                    <td th:text="${item.getOrganisationMetaDTO().assistantsCount}"></td>
-                    <td th:text="${item.getOrganisationMetaDTO().usersCount}"></td>
-                    <td th:text="${item.getOrganisationMetaDTO().chatsCount}"></td>
+                    <td th:text="${item.getOrganisationMetaDTO.departmentsCount}"></td>
+                    <td th:text="${item.getOrganisationMetaDTO.assistantsCount}"></td>
+                    <td th:text="${item.getOrganisationMetaDTO.usersCount}"></td>
+                    <td th:text="${item.getOrganisationMetaDTO.chatsCount}"></td>
                 </tr>
                 </tbody>
             </table>

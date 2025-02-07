@@ -7,7 +7,7 @@ import java.util.Optional;
 
 public interface OrganisationRepo extends ListCrudRepository<Organisation, Long> {
 
-    Optional<Organisation> findAllByMaskedId(String maskedId);
+    Optional<Organisation> findByUid(String maskedId);
 
     Optional<Organisation> findByNameIgnoreCase(String name);
 

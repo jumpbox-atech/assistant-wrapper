@@ -20,12 +20,12 @@
                       th:object="${formObject}"
                       method="POST">
                     <div class="input-group mb-3">
-                        <input th:field="*{organisationMaskedId}" type="text" class="form-control" id="wl-org-id"
+                        <input th:field="*{organisationUid}" type="text" class="form-control" id="wl-org-id"
                                name="wl-org-id"
                                placeholder="id" required readonly hidden>
                     </div>
                     <div class="input-group mb-3">
-                        <input th:field="*{maskedId}" type="text" class="form-control" id="wl-dept-id" name="wl-dept-id"
+                        <input th:field="*{uid}" type="text" class="form-control" id="wl-dept-id" name="wl-dept-id"
                                placeholder="id" required readonly hidden>
                     </div>
                     <div class="input-group mb-3">
@@ -43,7 +43,7 @@
 
                     <div class="d-flex justify-content-between align-items-center">
                         <!-- Left-aligned button -->
-                        <a th:href="@{'/admin/department/' + ${formObject.getOrganisationMaskedId()}}"
+                        <a th:href="@{'/admin/department/' + ${formObject.uid}}"
                            class="btn btn-outline-secondary justify-content-end">
                             <span></span> Cancel
                         </a>

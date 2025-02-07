@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 @Data
 public class OrganisationDTO {
 
-    private String maskedId;
+    private String uid;
     private LocalDateTime createdDateTime;
     private String createdBy;
     private String name;
@@ -18,7 +18,7 @@ public class OrganisationDTO {
     private OrganisationMetaDTO organisationMetaDTO;
 
     public OrganisationDTO build(Organisation record) {
-        this.maskedId = record.getMaskedId();
+        this.uid = record.getUid();
         this.createdDateTime = record.getCreatedDateTime();
         this.createdBy = record.getCreatedBy();
         this.name = record.getName();
@@ -29,7 +29,7 @@ public class OrganisationDTO {
     }
 
     public OrganisationDTO build(Organisation record, OrganisationMetaDTO organisationMetaDTO) {
-        this.maskedId = record.getMaskedId();
+        this.uid = record.getUid();
         this.createdDateTime = record.getCreatedDateTime();
         this.createdBy = record.getCreatedBy();
         this.name = record.getName();

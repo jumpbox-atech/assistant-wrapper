@@ -1,6 +1,5 @@
 package africa.za.atech.spring.aio.controller;
 
-import africa.za.atech.spring.aio.exceptions.GenericException;
 import africa.za.atech.spring.aio.functions.users.UsersService;
 import africa.za.atech.spring.aio.functions.users.dto.ForgotDTO;
 import africa.za.atech.spring.aio.functions.users.dto.RegisterDTO;
@@ -53,7 +52,6 @@ public class SystemUserController {
     public String showRegisterForm(
             Model model,
             @RequestParam(name = "complete", required = false) boolean complete) {
-
         if (!complete) {
             model.addAttribute("formObject", new RegisterDTO());
             return "register/register_form";
@@ -67,33 +65,25 @@ public class SystemUserController {
             Model model,
             @Validated @ModelAttribute("formObject") RegisterDTO form,
             RedirectAttributes redirectAttributes) {
-        alertList = new ArrayList<>(1);
-
         OutputTool outputTool = service.registerNewUser(form);
-        if (outputTool.getResult() == OutputTool.Result.SUCCESS) {
-            alertList.add(new Alert().build(Alert.AlertType.SUCCESS, outputTool.getComment()));
-            redirectAttributes.addFlashAttribute("alertList", alertList);
-            return "redirect:/register?complete=true";
-        } else {
+        if (outputTool.getResult() != OutputTool.Result.SUCCESS) {
             model.addAttribute("formObject", form);
-            alertList.add(new Alert().build(Alert.AlertType.DANGER, "Unable to register. Please try again later."));
-            model.addAttribute("alertList", alertList);
+            model.addAttribute("alertList", List.of(new Alert().build(Alert.AlertType.DANGER, "Unable to register. Please try again later.")));
             return "register/register_form";
         }
+        redirectAttributes.addFlashAttribute("alertList", List.of(new Alert().build(Alert.AlertType.SUCCESS, outputTool.getComment())));
+        return "redirect:/register?complete=true";
     }
 
     @GetMapping(value = {"/forgot"})
     public String showForgotForm(
             Model model,
             @RequestParam(name = "complete", required = false) boolean complete) {
-
         if (!complete) {
             model.addAttribute("formObject", new ForgotDTO());
             return "forgot/forgot_form";
         } else {
-            alertList = new ArrayList<>(1);
-            alertList.add(new Alert().build(Alert.AlertType.SUCCESS, "Temp password has been sent to your registered email."));
-            model.addAttribute("alertList", alertList);
+            model.addAttribute("alertList", List.of(new Alert().build(Alert.AlertType.SUCCESS, "Temp password has been sent to your registered email.")));
             return "forgot/forgot_result";
         }
 
@@ -103,15 +93,12 @@ public class SystemUserController {
     public String processForgotPassword(
             Model model,
             @Validated @ModelAttribute(name = "formObject") ForgotDTO form) {
-
         OutputTool outputTool = service.forgotPassword(form.getUsername());
         if (outputTool.getResult() == OutputTool.Result.SUCCESS) {
             return "redirect:/forgot?complete=true";
         } else {
-            alertList = new ArrayList<>(1);
-            alertList.add(new Alert().build(Alert.AlertType.DANGER, outputTool.getComment()));
             model.addAttribute("formObject", form);
-            model.addAttribute("alertList", alertList);
+            model.addAttribute("alertList", List.of(new Alert().build(Alert.AlertType.DANGER, outputTool.getComment())));
             return "forgot/forgot_form";
         }
     }
@@ -119,7 +106,6 @@ public class SystemUserController {
     @GetMapping(value = {"/login"})
     public String showLoginForm(
             @RequestParam(name = "error", required = false) String error,
-            @RequestParam(name = "logout", required = false) String logout,
             Model model) {
         alertList = new ArrayList<>(1);
         if (error != null) {
@@ -131,67 +117,30 @@ public class SystemUserController {
     }
 
     @GetMapping(value = {"/profile"})
-    public String getPasswordForm(
+    public String getProfileUpdateForms(
             Model model,
-            @RequestParam(name = "pwd", required = false) boolean isPassword) throws GenericException {
-        String loggedInUser = SecurityContextHolder.getContext().getAuthentication().getName();
-        UserProfileDTO userProfileDTO = service.getProfile(loggedInUser);
-        model.addAttribute("profileObject", userProfileDTO);
-        model.addAttribute("formObject", userProfileDTO);
+            @RequestParam(name = "pwd", required = false) boolean isPassword) {
+        model.addAttribute("formObject", service.getProfile(HelperTools.getLoggedInUsername()));
         if (isPassword) {
             return "profile/profile_password_form";
-        } else {
-            return "profile/profile_update_form";
         }
-
+        return "profile/profile_update_form";
     }
 
     @PostMapping(value = {"/profile"})
     public String updateUserDetails(
-            Model model,
             @Validated @ModelAttribute(name = "profileObject") UserProfileDTO userProfileDTO,
             RedirectAttributes redirectAttributes) {
-
-        boolean isPasswordUpdate = userProfileDTO.getNewPassword() != null;
-        if (isPasswordUpdate) {
-            alertList = new ArrayList<>(1);
-            if (!userProfileDTO.getNewPassword().equals(userProfileDTO.getConfirmPassword())) {
-                alertList.add(new Alert().build(Alert.AlertType.DANGER, "Passwords do not match. Please try again."));
-            } else {
-                List<String> passwordValidation = HelperTools.validatePassword(userProfileDTO.getNewPassword());
-                if (!passwordValidation.isEmpty()) {
-                    for (String s : passwordValidation) {
-                        alertList.add(new Alert().build(Alert.AlertType.DANGER, s));
-                    }
-                }
-            }
-        }
-
-
-        if (!alertList.isEmpty()) {
-            model.addAttribute("alertList", alertList);
-            model.addAttribute("profileObject", userProfileDTO);
-            model.addAttribute("formObject", userProfileDTO);
-            if (isPasswordUpdate) {
-                return "/profile/profile_password_form";
-            } else {
-                return "/profile/profile_update_form";
-            }
-        }
-
         // No error expected as front end validation is active for profile and password
         OutputTool outputTool = service.updateProfile(userProfileDTO);
-        redirectAttributes.addFlashAttribute("alertList", new Alert().build(Alert.AlertType.SUCCESS, outputTool.getComment()));
-        return "redirect:/home?updated=true";
+        redirectAttributes.addFlashAttribute("alertList", List.of(new Alert().build(Alert.AlertType.SUCCESS, outputTool.getComment())));
+        return "redirect:/home";
 
     }
 
     @GetMapping(value = {"/", "/home"})
-    public String showUserHomePage(Model model) throws GenericException {
-        String loggedInRole = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
-        String loggedInUser = SecurityContextHolder.getContext().getAuthentication().getName();
-
-        UserProfileDTO userProfileDTO = service.getProfile(loggedInUser);
+    public String showUserHomePage(Model model) {
+        UserProfileDTO userProfileDTO = service.getProfile(HelperTools.getLoggedInUsername());
         model.addAttribute("profileObject", userProfileDTO);
         String welcome = HelperTools.getString("static/html/home-intro.html")
                 .replaceAll("~NAME~", userProfileDTO.getName())

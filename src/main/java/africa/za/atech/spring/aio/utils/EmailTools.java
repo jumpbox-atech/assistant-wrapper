@@ -57,7 +57,7 @@ public class EmailTools {
                     }
                 }
             }
-            mailSender.send(message);
+//            mailSender.send(message);
             return new OutputTool().build(OutputTool.Result.SUCCESS, "", null);
         } catch (MessagingException e) {
             return new OutputTool().build(

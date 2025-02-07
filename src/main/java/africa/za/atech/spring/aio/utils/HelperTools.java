@@ -11,6 +11,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -68,6 +69,7 @@ public class HelperTools {
         return readCsv(toFile(csvFile, tempPath));
     }
 
+    @SuppressWarnings("all")
     public static String toHtml(String text) {
         text = "\n\n" + text;
         // Create a new HTML document
@@ -190,5 +192,13 @@ public class HelperTools {
     // Method to check if a string matches a regular expression pattern
     private static boolean matchesPattern(String input, String pattern) {
         return input.matches(pattern);
+    }
+
+    public static String getLoggedInUsername() {
+        return SecurityContextHolder.getContext().getAuthentication().getName();
+    }
+
+    public static String getLoggedInRole() {
+        return SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
     }
 }

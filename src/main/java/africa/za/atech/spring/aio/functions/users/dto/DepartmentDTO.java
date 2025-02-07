@@ -9,8 +9,8 @@ import java.time.LocalDateTime;
 @Data
 public class DepartmentDTO {
 
-    private String maskedId;
-    private String organisationMaskedId;
+    private String uid;
+    private String organisationUid;
     private String organisationName;
     private String name;
     private LocalDateTime createdDateTime;
@@ -20,9 +20,9 @@ public class DepartmentDTO {
     private String updateBy;
 
 
-    public DepartmentDTO build(String organisationName, String organisationMaskedId, Department department) {
-        this.maskedId = department.getMaskedId();
-        this.organisationMaskedId = organisationMaskedId;
+    public DepartmentDTO build(String organisationName, String organisationUid, Department department) {
+        this.uid = department.getMaskedId();
+        this.organisationUid = organisationUid;
         this.organisationName = organisationName;
         this.name = department.getName();
         this.createdDateTime = department.getCreatedDateTime();
@@ -34,8 +34,8 @@ public class DepartmentDTO {
     }
 
     public DepartmentDTO build(Organisation organisation, Department department) {
-        this.maskedId = department.getMaskedId();
-        this.organisationMaskedId = organisation.getMaskedId();
+        this.uid = department.getMaskedId();
+        this.organisationUid = organisation.getUid();
         this.organisationName = organisation.getName();
         this.name = department.getName();
         this.createdDateTime = department.getCreatedDateTime();

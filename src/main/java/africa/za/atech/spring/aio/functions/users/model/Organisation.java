@@ -26,8 +26,8 @@ public class Organisation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "masked_id")
-    private String maskedId;
+    @Column(name = "uid")
+    private String uid;
 
     @Column(name = "created_datetime")
     private LocalDateTime createdDateTime;
@@ -49,7 +49,7 @@ public class Organisation {
 
 
     public Organisation buildInsert(String loggedInUser, OrganisationDTO organisationDTO) {
-        this.maskedId = UUID.randomUUID().toString();
+        this.uid = UUID.randomUUID().toString();
         this.createdDateTime = LocalDateTime.now();
         this.createdBy = loggedInUser;
         this.name = organisationDTO.getName();

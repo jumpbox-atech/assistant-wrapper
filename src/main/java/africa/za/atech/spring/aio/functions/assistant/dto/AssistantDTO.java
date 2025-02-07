@@ -7,8 +7,8 @@ import lombok.Data;
 @Data
 public class AssistantDTO {
 
-    private String maskedId;
-    private String organisationMaskedId;
+    private String uid;
+    private String organisationUid;
     private String organisationName;
     private String username;
     private String name;
@@ -19,7 +19,7 @@ public class AssistantDTO {
     private String externalApiKey;
 
     public AssistantDTO build(Assistants assistants) {
-        this.maskedId = assistants.getMaskedId();
+        this.uid = assistants.getMaskedId();
         this.username = assistants.getCreatedBy();
         this.name = assistants.getName();
         this.description = assistants.getDescription();
@@ -31,8 +31,8 @@ public class AssistantDTO {
     }
 
     public AssistantDTO build(Organisation organisation, Assistants assistants) {
-        this.maskedId = assistants.getMaskedId();
-        this.organisationMaskedId = organisation.getMaskedId();
+        this.uid = assistants.getMaskedId();
+        this.organisationUid = organisation.getUid();
         this.organisationName = organisation.getName();
         this.username = assistants.getCreatedBy();
         this.name = assistants.getName();

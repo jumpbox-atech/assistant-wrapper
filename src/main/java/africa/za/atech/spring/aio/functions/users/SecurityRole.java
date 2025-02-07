@@ -9,6 +9,7 @@ public enum SecurityRole {
 
     USER("USER"),
     MANAGER("MANAGER"),
+    ORG_ADMIN("ORG_ADMIN"),
     ADMIN("ADMIN");
 
     private final String value;

@@ -44,12 +44,12 @@
                     <td>
                         <div class="table_cell_inline_multi_button">
                             <a href="#" class="btn btn-outline-danger btn-sm" sec:authorize="hasAnyRole('ADMIN')"
-                               th:attr="data-org-maskedId=${item.organisationMaskedId}, data-dept-maskedId=${item.maskedId}"
+                               th:attr="data-org-maskedId=${item.organisationUid}, data-dept-maskedId=${item.uid}"
                                onclick="showConfirmationModal(this)">
                                 <i class="fa-solid fa-ban"></i>
                             </a>
                             </a>
-                            <a th:href="@{'/admin/department/update/' + ${item.maskedId}}"
+                            <a th:href="@{'/admin/department/update/' + ${item.uid}}"
                                class="btn btn-outline-secondary btn-sm"><i class="fa-solid fa-pencil"></i></a>
                         </div>
 

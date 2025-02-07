@@ -6,7 +6,7 @@
 CREATE TABLE public.organisation
 (
     id                   serial,
-    masked_id            character varying           NOT NULL,
+    uid                  character varying           NOT NULL,
     created_datetime     timestamp without time zone NOT NULL,
     created_by           character varying           NOT NULL,
     name                 character varying           NOT NULL,
@@ -39,24 +39,23 @@ ALTER TABLE IF EXISTS public.department
 
 CREATE TABLE public.users
 (
-    id                   serial,
-    masked_id            character varying           NOT NULL,
-    created_datetime     timestamp without time zone NOT NULL,
-    username             character varying           NOT NULL,
-    name                 character varying           NOT NULL,
-    surname              character varying           NOT NULL,
-    email_address        character varying           NOT NULL,
-    role                 character varying           NOT NULL,
-    password             character varying           NOT NULL,
-    disabled             boolean                     NOT NULL,
-    mfa_disabled         boolean                     NOT NULL,
-    mfa_secret           character varying           NOT NULL,
-    custom_property_a    character varying           NOT NULL,
-    custom_property_b    character varying           NOT NULL,
-    custom_property_c    character varying           NOT NULL,
-    custom_property_d    character varying           NOT NULL,
-    inserted_by_username character varying           NOT NULL,
-    organisation_id      integer                     NOT NULL,
+    id                      serial,
+    uid                     character varying           NOT NULL,
+    organisation_uid        character varying           NOT NULL,
+    created_datetime        timestamp without time zone NOT NULL,
+    created_by              character varying           NOT NULL,
+    username                character varying           NOT NULL,
+    name                    character varying           NOT NULL,
+    surname                 character varying           NOT NULL,
+    email_address           character varying           NOT NULL,
+    role                    character varying           NOT NULL,
+    password                character varying           NOT NULL,
+    disabled                boolean                     NOT NULL,
+    mfa_disabled            boolean                     NOT NULL,
+    mfa_secret              character varying           NOT NULL,
+    assistants_uuids        character varying,
+    updated_datetime        timestamp without time zone,
+    updated_by              character varying,
     PRIMARY KEY (id)
 );
 

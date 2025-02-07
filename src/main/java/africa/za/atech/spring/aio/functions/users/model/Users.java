@@ -1,6 +1,5 @@
 package africa.za.atech.spring.aio.functions.users.model;
 
-import africa.za.atech.spring.aio.functions.users.SecurityRole;
 import jakarta.persistence.*;
 import jakarta.transaction.Transactional;
 import lombok.Getter;
@@ -10,6 +9,8 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -26,14 +27,20 @@ public class Users {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
+    @Column(name = "uid")
+    private String uid;
+
+    @Column(name = "organisation_uid")
+    private String organisationUid;
+
     @Column(name = "created_datetime")
     private LocalDateTime createdDateTime;
 
+    @Column(name = "created_by")
+    private String createdBy;
+
     @Column(name = "username")
     private String username;
-
-    @Column(name = "masked_id")
-    private String maskedId;
 
     @Column(name = "name")
     private String name;
@@ -59,54 +66,38 @@ public class Users {
     @Column(name = "mfa_secret")
     private String mfaSecret;
 
-    @Column(name = "custom_property_a")
-    private String customPropertyA;
+    @Column(name = "assistants_uuids")
+    private String assistantsUuids;
 
-    @Column(name = "custom_property_b")
-    private String customPropertyB;
+    @Column(name = "updated_datetime")
+    private LocalDateTime updatedDateTime;
 
-    @Column(name = "custom_property_c")
-    private String customPropertyC;
+    @Column(name = "updated_by")
+    private String updated_by;
 
-    @Column(name = "custom_property_d")
-    private String customPropertyD;
-
-    @Column(name = "inserted_by_username")
-    private String insertedBy;
-
-    // TODO: Need to set org on insert or set to for an unallocated user
-    @Column(name = "organisation_id")
-    private long organisationId;
-
-    public Users buildInsert(LocalDateTime createdDateTime,
+    public Users buildInsert(String organisationUuid,
+                             String createdBy,
                              String username,
                              String name,
                              String surname,
                              String emailAddress,
-                             SecurityRole role,
+                             String role,
                              String password,
-                             String customPropertyA,
-                             String customPropertyB,
-                             String customPropertyC,
-                             String customPropertyD,
-                             String insertedBy) {
-        this.maskedId = UUID.randomUUID().toString();
-        this.createdDateTime = createdDateTime;
+                             List<String> assistantsUuids) {
+        this.uid = UUID.randomUUID().toString();
+        this.organisationUid = organisationUuid;
+        this.createdDateTime = LocalDateTime.now();
+        this.createdBy = createdBy;
         this.username = username.toLowerCase();
         this.name = name;
         this.surname = surname;
         this.emailAddress = emailAddress;
-        this.role = role.getValue();
+        this.role = role;
         this.password = password;
         this.disabled = false;
         this.mfaDisabled = true;
-        this.mfaSecret = "null";
-        this.customPropertyA = customPropertyA;
-        this.customPropertyB = customPropertyB;
-        this.customPropertyC = customPropertyC;
-        this.customPropertyD = customPropertyD;
-        this.insertedBy = insertedBy;
-        this.organisationId = 0L;
+        this.mfaSecret = "";
+        this.assistantsUuids = Arrays.toString(assistantsUuids.toArray());
         return this;
     }
 }

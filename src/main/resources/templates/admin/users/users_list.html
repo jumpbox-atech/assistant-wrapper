@@ -21,7 +21,7 @@
     <div id="working_area" class="flex-grow-1 p-5 rounded border" style="min-height: 80vh;">
 
         <!--  CONTENT      -->
-        <div class="d-flex justify-content-end mb-3">
+        <div class="d-flex justify-content-end mb-3" sec:authorize="hasAnyRole('ADMIN')">
             <a th:href="@{/admin/whitelist/add}" class="btn btn-sm btn-outline-secondary disabled">Add</a>
         </div>
 
@@ -31,6 +31,7 @@
                 <thead class="table-dark">
                 <tr>
                     <th></th>
+                    <th>Organisation</th>
                     <th>First Name</th>
                     <th>Last Name</th>
                     <th>Username</th>
@@ -42,9 +43,9 @@
                 <tbody>
                 <tr th:each="item : ${recordList}">
                     <td>
-                        <a id="user_delete" sec:authorize="hasAnyRole('ADMIN')"
+                        <a id="user_delete" sec:authorize="hasAnyRole('ADMIN','ORG_ADMIN')"
                            href="#" class="btn btn-outline-danger btn-sm"
-                           th:attr="field-data=${item.maskedId}" onclick="showConfirmationModal(this)"
+                           th:attr="field-data=${item.uid}" onclick="showConfirmationModal(this)"
                            data-bs-toggle="tooltip"
                            data-bs-delay="50"
                            data-bs-placement="top"
@@ -54,6 +55,7 @@
                         <a th:href="@{/admin/users/update(username=${item.username})}"
                            class="btn btn-outline-secondary btn-sm"><i class="fa-solid fa-pencil"></i></a>
                     </td>
+                    <td th:text="${item.organisationName}"></td>
                     <td th:text="${item.name}"></td>
                     <td th:text="${item.surname}"></td>
                     <td th:text="${item.username}"></td>

@@ -1,6 +1,5 @@
 package africa.za.atech.spring.aio.controller;
 
-import africa.za.atech.spring.aio.exceptions.GenericException;
 import africa.za.atech.spring.aio.functions.assistant.AssistantService;
 import africa.za.atech.spring.aio.functions.assistant.dto.AssistantDTO;
 import africa.za.atech.spring.aio.functions.users.UsersService;
@@ -37,12 +36,12 @@ public class AssistantController {
     }
 
     @GetMapping(value = {"/admin/assistants/insert"})
-    public String getAssistantAddForm(Model model) throws GenericException {
+    public String getAssistantAddForm(Model model) {
         String loggedInUser = SecurityContextHolder.getContext().getAuthentication().getName();
         UserProfileDTO u = usersService.getProfile(loggedInUser);
 
         AssistantDTO formObject = new AssistantDTO();
-        formObject.setOrganisationMaskedId(u.getOrganisationMaskedId());
+        formObject.setOrganisationUid(u.getOrganisationUuid());
         model.addAttribute("formObject", formObject);
         return "admin/assistants/assistant_insert";
     }

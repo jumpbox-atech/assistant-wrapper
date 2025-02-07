@@ -1,6 +1,5 @@
 package africa.za.atech.spring.aio.controller;
 
-import africa.za.atech.spring.aio.exceptions.GenericException;
 import africa.za.atech.spring.aio.functions.chats.ChatService;
 import africa.za.atech.spring.aio.functions.chats.dto.ChatHistoryDTO;
 import africa.za.atech.spring.aio.functions.chats.dto.ChatListDTO;
@@ -38,17 +37,14 @@ public class ChatController {
     @GetMapping("/chat")
     public String showChatPage(
             Model model,
-            RedirectAttributes redirectAttributes) throws GenericException {
-        alertList = new ArrayList<>(1);
-
+            RedirectAttributes redirectAttributes) {
         // Mandatory models
         String loggedInUser = SecurityContextHolder.getContext().getAuthentication().getName();
         UserProfileDTO userProfileDTO = service.getProfile(loggedInUser);
         model.addAttribute("profileObject", userProfileDTO);
 
-        if (userProfileDTO.getAssistantId().equalsIgnoreCase("null")) {
-            alertList.add(new Alert().build(Alert.AlertType.WARNING, "No assistants are assigned. Please contact support."));
-            redirectAttributes.addFlashAttribute("alertList", alertList);
+        if (userProfileDTO.getAssistantId().equalsIgnoreCase("[]")) {
+            redirectAttributes.addFlashAttribute("alertList", List.of(new Alert().build(Alert.AlertType.WARNING, "No assistants are assigned. Please contact support.")));
             return "redirect:/home?chat=warn";
         }
         // Add users list of chats
@@ -157,7 +153,7 @@ public class ChatController {
     public String getChatToContinue(
             Model model,
             @RequestParam(value = "id") String chatId,
-            @RequestParam(value = "type", required = false) boolean typeWrite) throws GenericException {
+            @RequestParam(value = "type", required = false) boolean typeWrite) {
         // Mandatory models
         String loggedInUser = SecurityContextHolder.getContext().getAuthentication().getName();
         UserProfileDTO userProfileDTO = service.getProfile(loggedInUser);

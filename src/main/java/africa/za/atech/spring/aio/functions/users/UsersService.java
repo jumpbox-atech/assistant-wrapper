@@ -1,6 +1,5 @@
 package africa.za.atech.spring.aio.functions.users;
 
-import africa.za.atech.spring.aio.exceptions.GenericException;
 import africa.za.atech.spring.aio.functions.chats.ChatService;
 import africa.za.atech.spring.aio.functions.users.dto.*;
 import africa.za.atech.spring.aio.functions.users.model.Department;
@@ -23,9 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -63,6 +60,9 @@ public class UsersService {
 
     private final PasswordEncoder encoder;
 
+    private static String systemOrgUuid;
+    private static String unassignedOrgUuid;
+
     public List<OrganisationDTO> getAllOrganisation() {
         return repoOrganisation.findAll()
                 .stream()
@@ -71,7 +71,7 @@ public class UsersService {
     }
 
     public OrganisationDTO getOrganisation(String organisationId) {
-        return getOrganisation(repoOrganisation.findAllByMaskedId(organisationId).get());
+        return getOrganisation(repoOrganisation.findByUid(organisationId).get());
     }
 
     private OrganisationDTO getOrganisation(Organisation record) {
@@ -94,35 +94,34 @@ public class UsersService {
         return new OrganisationDTO().build(record, meta);
     }
 
-    public OutputTool addOrganisation(String loggedInUser, OrganisationDTO form) {
+    public OutputTool addOrganisation(OrganisationDTO form) {
         Optional<Organisation> lookup = repoOrganisation.findByNameIgnoreCase(form.getName());
         if (lookup.isPresent()) {
             return new OutputTool().build(OutputTool.Result.EXCEPTION, "Organisation " + HelperTools.wrapVar(form.getName()) + " already exists.", null);
         }
-        Organisation record = new Organisation().buildInsert(loggedInUser, form);
+        Organisation record = new Organisation().buildInsert(HelperTools.getLoggedInUsername(), form);
         repoOrganisation.save(record);
         return new OutputTool().build(OutputTool.Result.SUCCESS, "Organisation added successfully.", new OrganisationDTO().build(record, new OrganisationMetaDTO()));
     }
 
-    public OutputTool updateOrganisation(String loggedInUser, OrganisationDTO form) {
+    public OutputTool updateOrganisation(OrganisationDTO form) {
         Optional<Organisation> lookup = repoOrganisation.findByName(form.getName());
         if (lookup.isPresent()) {
             return new OutputTool().build(OutputTool.Result.EXCEPTION, "Organisation " + HelperTools.wrapVar(form.getName()) + " already exists.", null);
         }
-        Optional<Organisation> record = repoOrganisation.findAllByMaskedId(form.getMaskedId());
+        Optional<Organisation> record = repoOrganisation.findByUid(form.getUid());
         if (record.isEmpty()) {
             return new OutputTool().build(OutputTool.Result.EXCEPTION, "Organisation does not exist.", null);
         }
         record.get().setName(form.getName());
-        record.get().setUpdateBy(loggedInUser);
+        record.get().setUpdateBy(HelperTools.getLoggedInUsername());
         record.get().setUpdateDatetime(LocalDateTime.now());
         repoOrganisation.save(record.get());
         return new OutputTool().build(OutputTool.Result.SUCCESS, "Organisation updated successfully.", null);
-
     }
 
-    public OutputTool deleteOrganisation(String loggedInUser, String maskedId) {
-        Optional<Organisation> organisationRecord = repoOrganisation.findAllByMaskedId(maskedId);
+    public OutputTool deleteOrganisation(String maskedId) {
+        Optional<Organisation> organisationRecord = repoOrganisation.findByUid(maskedId);
         if (organisationRecord.isEmpty()) {
             return new OutputTool().build(OutputTool.Result.EXCEPTION, "Organisation does not exist.", null);
         }
@@ -130,8 +129,8 @@ public class UsersService {
         return new OutputTool().build(OutputTool.Result.SUCCESS, "Organisation deleted successfully.", null);
     }
 
-    public OutputTool addDepartmentForOrg(String loggedInUser, DepartmentDTO form) {
-        Optional<Organisation> orgRecord = repoOrganisation.findAllByMaskedId(form.getOrganisationMaskedId());
+    public OutputTool addDepartmentForOrg(DepartmentDTO form) {
+        Optional<Organisation> orgRecord = repoOrganisation.findByUid(form.getOrganisationUid());
         List<Department> existingDepartments = repoDepartment.findAllByOrganisationId(orgRecord.get().getId());
         if (!existingDepartments.isEmpty()) {
             for (Department d : existingDepartments) {
@@ -140,19 +139,19 @@ public class UsersService {
                 }
             }
         }
-        Department record = new Department().buildInsert(loggedInUser, orgRecord.get().getId(), form);
+        Department record = new Department().buildInsert(HelperTools.getLoggedInUsername(), orgRecord.get().getId(), form);
         repoDepartment.save(record);
         return new OutputTool().build(OutputTool.Result.SUCCESS, "Department added successfully to the '" + record.getName() + "' organisation.", null);
     }
 
-    public DepartmentDTO getDepartment(String loggedInUser, String maskedId) {
+    public DepartmentDTO getDepartment(String maskedId) {
         Department departmentRecord = repoDepartment.findByMaskedId(maskedId).get();
         Organisation orgRecord = repoOrganisation.findById(departmentRecord.getOrganisationId()).get();
         return new DepartmentDTO().build(orgRecord, departmentRecord);
     }
 
-    public OutputTool updateDepartmentForOrg(String loggedInUser, DepartmentDTO form) {
-        Optional<Organisation> orgRecord = repoOrganisation.findAllByMaskedId(form.getOrganisationMaskedId());
+    public OutputTool updateDepartmentForOrg(DepartmentDTO form) {
+        Optional<Organisation> orgRecord = repoOrganisation.findByUid(form.getOrganisationUid());
         List<Department> existingDepartments = repoDepartment.findAllByOrganisationId(orgRecord.get().getId());
         if (!existingDepartments.isEmpty()) {
             for (Department d : existingDepartments) {
@@ -161,61 +160,33 @@ public class UsersService {
                 }
             }
         }
-        Optional<Department> record = repoDepartment.findByMaskedId(form.getMaskedId());
+        Optional<Department> record = repoDepartment.findByMaskedId(form.getUid());
         if (record.isEmpty()) {
             return new OutputTool().build(OutputTool.Result.EXCEPTION, "Department does not exist.", null);
         }
         record.get().setName(form.getName());
-        record.get().setUpdateBy(loggedInUser);
+        record.get().setUpdateBy(HelperTools.getLoggedInUsername());
         record.get().setUpdateDatetime(LocalDateTime.now());
         repoDepartment.save(record.get());
         return new OutputTool().build(OutputTool.Result.SUCCESS, "Department updated successfully.", null);
     }
 
-    public OutputTool deleteDepartmentForOrg(String loggedInUser, String departmentMaskedId) {
+    public OutputTool deleteDepartmentForOrg(String departmentMaskedId) {
         repoDepartment.deleteAllByMaskedId(departmentMaskedId);
         return new OutputTool().build(OutputTool.Result.SUCCESS, "Department deleted successfully", null);
     }
 
-    public Users addUser(LocalDateTime createdDateTime,
-                         String username,
-                         String name,
-                         String surname,
-                         String emailAddress,
-                         String plainPassword,
-                         SecurityRole role,
-                         String customPropertyA,
-                         String customPropertyB,
-                         String customPropertyC,
-                         String customPropertyD,
-                         String insertedBy) {
-
-        Users userRecord = new Users().buildInsert(
-                createdDateTime,
-                username.toLowerCase(),
-                name,
-                surname,
-                emailAddress,
-                role,
-                encoder.encode(plainPassword),
-                customPropertyA,
-                customPropertyB,
-                customPropertyC,
-                customPropertyD,
-                insertedBy);
+    public Users addUser(String organisationUuid, String createdBy, String username, String name,
+                         String surname, String emailAddress, SecurityRole role, String password,
+                         List<String> assistantsUuids) {
+        Users userRecord = new Users().buildInsert(organisationUuid, createdBy, username, name, surname,
+                emailAddress, role.getValue(), encoder.encode(password), assistantsUuids);
         repoUsers.save(userRecord);
-
         log.info("User with username: [{}] has been created with the role: [{}]", userRecord.getUsername(), role.getValue());
         return userRecord;
     }
 
     public OutputTool registerNewUser(RegisterDTO registerDTO) {
-        log.info("Incoming registration: {}", registerDTO);
-        String customPropA = "null";
-        String customPropB = "null";
-        String customPropC = "null";
-        String customPropD = "null";
-
         Optional<Users> usernameLookup = repoUsers.findByUsernameIgnoreCase(registerDTO.getUsername());
         if (usernameLookup.isPresent()) {
             log.info("Account exists for the username: {}", registerDTO.getUsername());
@@ -228,36 +199,20 @@ public class UsersService {
                 log.warn("User not whitelisted for registration: {}", registerDTO.getUsername());
                 return new OutputTool().build(OutputTool.Result.PROCESS_RULE, "User not allowed to register", null);
             }
-            customPropA = whiteListing.get().getCustomPropertyA();
-            customPropB = whiteListing.get().getCustomPropertyB();
-            customPropC = whiteListing.get().getCustomPropertyC();
-            customPropD = whiteListing.get().getCustomPropertyD();
         }
 
         // Registration process for private and public policy
         String password = HelperTools.generatePassword(9, 2, 0);
-        LocalDateTime dateTime = LocalDateTime.now();
-        Users userRecord = addUser(
-                dateTime,
-                registerDTO.getUsername(),
+        Users userRecord = addUser(unassignedOrgUuid, "system",
+                registerDTO.getUsername().toLowerCase(),
                 registerDTO.getName(),
                 registerDTO.getSurname(),
                 registerDTO.getEmailAddress(),
-                password,
                 SecurityRole.USER,
-                customPropA,
-                customPropB,
-                customPropC,
-                customPropD,
-                "system-registration");
+                password,
+                new ArrayList<>());
 
         // Send Email
-        List<String> to = new ArrayList<>();
-        to.add(userRecord.getEmailAddress());
-
-        List<String> bcc = new ArrayList<>();
-        bcc.add(fromEmailAddress);
-
         String subject = "Registration Successful: Welcome to ~APP_NAME~!"
                 .replaceAll("~APP_NAME~", appName);
 
@@ -269,7 +224,7 @@ public class UsersService {
         body = body.replaceAll("~APP_URL~", appUrl);
         body = body.replaceAll("~FROM_EMAIL_ADDRESS~", fromEmailAddress);
 
-        OutputTool outputTool = emailTools.send(to, subject, body, null, bcc, null);
+        OutputTool outputTool = emailTools.send(List.of(userRecord.getEmailAddress()), subject, body, null, List.of(fromEmailAddress), null);
         if (!outputTool.getResult().equals(OutputTool.Result.SUCCESS)) {
             return outputTool;
         }
@@ -283,32 +238,51 @@ public class UsersService {
     }
 
     public List<UserProfileDTO> getProfiles() {
-        List<Users> usersList = repoUsers.findAll();
-        List<UserProfileDTO> profileDAOList = new ArrayList<>(usersList.size());
-        for (Users record : usersList) {
-            Organisation organisation = repoOrganisation.findById(record.getOrganisationId()).get();
-            profileDAOList.add(new UserProfileDTO().build(organisation.getMaskedId(), record));
+        UserProfileDTO requestingUser = getProfile(HelperTools.getLoggedInUsername());
+        List<UserProfileDTO> allUsers = new ArrayList<>(repoUsers.findAll().stream().map(u -> new UserProfileDTO().build(repoOrganisation.findByUid(u.getOrganisationUid()).get().getName(), u)).toList());
+
+        Iterator<UserProfileDTO> iterator = allUsers.iterator();
+        UserProfileDTO dto;
+        if (requestingUser.getRoles().equalsIgnoreCase(SecurityRole.ORG_ADMIN.getValue())) {
+            while (iterator.hasNext()) {
+                dto = iterator.next();
+                if (!dto.getOrganisationUuid().equals(requestingUser.getOrganisationUuid()) || dto.getRoles().equalsIgnoreCase(SecurityRole.ADMIN.getValue())) {
+                    iterator.remove();
+                }
+            }
         }
-        return profileDAOList;
+        if (requestingUser.getRoles().equalsIgnoreCase(SecurityRole.MANAGER.getValue())) {
+            while (iterator.hasNext()) {
+                dto = iterator.next();
+                if (!dto.getOrganisationUuid().equals(requestingUser.getOrganisationUuid()) || !dto.getRoles().equalsIgnoreCase(SecurityRole.USER.getValue())) {
+                    iterator.remove();
+                }
+            }
+        }
+        return allUsers;
     }
 
-    public UserProfileDTO getProfile(String username) throws GenericException {
-        Optional<Users> record = repoUsers.findByUsernameIgnoreCase(username);
-        if (record.isEmpty()) {
-            throw new GenericException("User profile does not exist for username: " + username);
-        }
-        Organisation organisation = repoOrganisation.findById(record.get().getOrganisationId()).get();
-        return new UserProfileDTO().build(organisation.getMaskedId(), record.get());
+    public UserProfileDTO getProfile(String username) {
+        Users record = repoUsers.findByUsernameIgnoreCase(username).get();
+        Organisation organisation = repoOrganisation.findByUid(record.getOrganisationUid()).get();
+        return new UserProfileDTO().build(organisation.getName(), record);
     }
 
     public OutputTool updateProfile(UserProfileDTO form) {
-        OutputTool out = new OutputTool();
+        Users userRecord = repoUsers.findByUid(form.getUid()).get();
+
         // If new password field is mot null, password update required
-        boolean isPasswordUpdate = form.getNewPassword() != null;
+        if (form.getNewPassword() != null) {
+            if (!form.getNewPassword().isEmpty() && !form.getConfirmPassword().isEmpty()) {
+                userRecord.setPassword(encoder.encode(form.getNewPassword()));
+            }
+            repoUsers.save(userRecord);
+            return new OutputTool().build(OutputTool.Result.SUCCESS, "Password updated successfully.", null);
+        } else {
+            // change organisation
+            Organisation organisation = repoOrganisation.findByUid(form.getOrganisationUuid()).get();
+            userRecord.setOrganisationUid(organisation.getUid());
 
-        Users userRecord = repoUsers.findByUsernameIgnoreCase(form.getUsername()).get();
-
-        if (!isPasswordUpdate) {
             // Change name
             if (!userRecord.getName().equalsIgnoreCase(form.getName())) {
                 userRecord.setName(form.getName());
@@ -323,8 +297,8 @@ public class UsersService {
             }
             // Change Assistant
             if (form.getAssistantId() != null) {
-                if (!userRecord.getCustomPropertyA().equalsIgnoreCase(form.getAssistantId())) {
-                    userRecord.setCustomPropertyA(form.getAssistantId());
+                if (!userRecord.getAssistantsUuids().equalsIgnoreCase(form.getAssistantId())) {
+                    userRecord.setAssistantsUuids(form.getAssistantId());
                 }
             }
             // Change Role
@@ -337,67 +311,53 @@ public class UsersService {
             if (userRecord.isDisabled() != form.isDisabled()) {
                 userRecord.setDisabled(form.isDisabled());
             }
-            out.setComment("Profile updated successfully.");
+            repoUsers.save(userRecord);
+            return new OutputTool().build(OutputTool.Result.SUCCESS, "Profile updated successfully.", null);
         }
-
-        // Change password
-        if (isPasswordUpdate) {
-            if (!form.getNewPassword().isEmpty() && !form.getConfirmPassword().isEmpty()) {
-                userRecord.setPassword(encoder.encode(form.getNewPassword()));
-                out.setComment("Password changed successfully.");
-            }
-        }
-
-        repoUsers.save(userRecord);
-        out.setResult(OutputTool.Result.SUCCESS);
-        return out;
     }
 
     public OutputTool forgotPassword(String username) {
         Optional<Users> lookupRecord = repoUsers.findByUsernameIgnoreCase(username);
         if (lookupRecord.isEmpty()) {
-            return new OutputTool().build(OutputTool.Result.PROCESS_RULE, "Unable to reset password. Account not found.", null);
+            return new OutputTool().build(OutputTool.Result.EXCEPTION, "Unable to reset password. Account not found.", null);
         }
-
-        Users userRecord = lookupRecord.get();
         // Validate account status and return response if required
-        if (userRecord.isDisabled()) {
+        if (lookupRecord.get().isDisabled()) {
             return new OutputTool().build(OutputTool.Result.PROCESS_RULE, "Unable to reset password. Account has been disabled.", null);
         }
 
         // GENERATE TEMP PASSWORD
         String password = HelperTools.generatePassword(9, 2, 0);
-
-        userRecord.setPassword(encoder.encode(password));
-        repoUsers.save(userRecord);
+        lookupRecord.get().setPassword(encoder.encode(password));
+        repoUsers.save(lookupRecord.get());
 
         // SEND EMAIL
         String subject = "Temporary Credentials";
         String body = HelperTools.getString("static/html/email-forgot_password.html");
-        body = body.replaceAll("~USER~", userRecord.getName() + " " + userRecord.getSurname());
+        body = body.replaceAll("~USER~", lookupRecord.get().getName() + " " + lookupRecord.get().getSurname());
         body = body.replaceAll("~APP_NAME~", appName);
         body = body.replaceAll("~TEMP_PASSWORD~", password);
         body = body.replaceAll("~APP_URL~", appUrl);
         body = body.replaceAll("~FROM_EMAIL_ADDRESS~", fromEmailAddress);
 
-        OutputTool outputTool = emailTools.send(List.of(userRecord.getEmailAddress()), subject, body, null, null, null);
-        if (!outputTool.getResult().equals(OutputTool.Result.SUCCESS)) {
-            return outputTool;
+        OutputTool emailResult = emailTools.send(List.of(lookupRecord.get().getEmailAddress()), subject, body, null, null, null);
+        if (emailResult.getResult().equals(OutputTool.Result.EXCEPTION)) {
+            return emailResult;
         }
-        return new OutputTool().build(OutputTool.Result.SUCCESS, "Temp password send to registered email", null);
+        return new OutputTool().build(OutputTool.Result.SUCCESS, "Temp password sent to registered email.", null);
     }
 
-    public OutputTool deleteUser(String loggedInUser, String maskedId) {
+    public OutputTool deleteUser(String uuid) {
         // Get User
-        Optional<Users> userRecord = repoUsers.findAllByMaskedId(maskedId);
+        Optional<Users> userRecord = repoUsers.findByUid(uuid);
         if (userRecord.isEmpty()) {
             return new OutputTool().build(OutputTool.Result.EXCEPTION, "User record not found.", null);
         }
-        if (userRecord.get().getUsername().equalsIgnoreCase(loggedInUser)) {
+        if (userRecord.get().getUsername().equalsIgnoreCase(HelperTools.getLoggedInUsername())) {
             return new OutputTool().build(OutputTool.Result.EXCEPTION, "Unable to process action.", null);
         }
+        // TODO: change to use users uid
         OutputTool.Result result = chatService.deleteAllUsersChats(userRecord.get().getUsername()).getResult();
-
         if (result == OutputTool.Result.SUCCESS) {
             repoUsers.delete(userRecord.get());
             return new OutputTool().build(OutputTool.Result.SUCCESS, "User deleted successfully.", null);
@@ -407,12 +367,41 @@ public class UsersService {
     }
 
     public void addSystemAdmin() {
-        Optional<Users> record = repoUsers.findByUsernameIgnoreCase(systemAdminUsername);
+        Optional<Organisation> systemLookup = repoOrganisation.findByNameIgnoreCase("system");
+        Organisation systemOrg;
+        if (systemLookup.isEmpty()) {
+            systemOrg = new Organisation();
+            systemOrg.setUid(UUID.randomUUID().toString());
+            systemOrg.setCreatedBy("system");
+            systemOrg.setCreatedDateTime(LocalDateTime.now());
+            systemOrg.setName("system");
+            systemOrg.setDisabled(false);
+            repoOrganisation.save(systemOrg);
+        } else {
+            systemOrg = systemLookup.get();
+        }
+        systemOrgUuid = systemOrg.getUid();
+
+        Optional<Organisation> unassignedLookup = repoOrganisation.findByNameIgnoreCase("unassigned");
+        Organisation unassignedOrg;
+        if (unassignedLookup.isEmpty()) {
+            unassignedOrg = new Organisation();
+            unassignedOrg.setUid(UUID.randomUUID().toString());
+            unassignedOrg.setCreatedBy("system");
+            unassignedOrg.setCreatedDateTime(LocalDateTime.now());
+            unassignedOrg.setName("unassigned");
+            unassignedOrg.setDisabled(false);
+            repoOrganisation.save(unassignedOrg);
+        } else {
+            unassignedOrg = unassignedLookup.get();
+        }
+        unassignedOrgUuid = unassignedOrg.getUid();
+
+        Optional<Users> record = repoUsers.findByOrganisationUidAndUsernameIgnoreCase(systemOrgUuid, systemAdminUsername);
         if (record.isEmpty()) {
             if (createSystemAdminUser) {
-                addUser(LocalDateTime.now(), systemAdminUsername, systemAdminName, systemAdminSurname, systemAdminEmailAddress, systemAdminPwd, SecurityRole.ADMIN,
-                        "null", "null", "null", "null",
-                        "system-initialize");
+                addUser(systemOrgUuid, "system", systemAdminUsername, systemAdminName, systemAdminSurname,
+                        systemAdminEmailAddress, SecurityRole.ADMIN, systemAdminPwd, new ArrayList<>());
                 log.info("*** System ADMIN has been created");
             }
         }
@@ -436,19 +425,19 @@ public class UsersService {
         return new OutputTool().build(OutputTool.Result.SUCCESS, "", record.get());
     }
 
-    public OutputTool addWhitelistEntry(String loggedInUser, WhitelistRegDTO whitelistRegDAOS) {
+    public OutputTool addWhitelistEntry(WhitelistRegDTO whitelistRegDAOS) {
         Optional<RegistrationWhitelist> whitelistRegDTO = repoWhiteList.findByUsernameIgnoreCase(whitelistRegDAOS.getUsername().toLowerCase());
         if (whitelistRegDTO.isPresent()) {
             return new OutputTool().build(OutputTool.Result.EXCEPTION, "Whitelisting with " +
                     "username: [" + whitelistRegDAOS.getUsername() + "] already exists.", null);
         }
-        RegistrationWhitelist dto = new RegistrationWhitelist().buildInsert(loggedInUser, whitelistRegDAOS);
+        RegistrationWhitelist dto = new RegistrationWhitelist().buildInsert(HelperTools.getLoggedInUsername(), whitelistRegDAOS);
         repoWhiteList.save(dto);
         return new OutputTool().build(OutputTool.Result.SUCCESS, "Whitelisting for username: [" + dto.getUsername() +
                 "] has been inserted successfully", null);
     }
 
-    public OutputTool updateWhitelistEntry(String loggedInUser, WhitelistRegDTO form) {
+    public OutputTool updateWhitelistEntry(WhitelistRegDTO form) {
         RegistrationWhitelist dto = repoWhiteList.findByUsernameIgnoreCase(form.getUsername().toLowerCase()).get();
         dto.setUsername(form.getUsername());
         dto.setName(form.getName());
@@ -463,17 +452,17 @@ public class UsersService {
         repoWhiteList.delete(repoWhiteList.findByUsernameIgnoreCase(usernameToDelete.toLowerCase()).get());
     }
 
-    public List<RegistrationWhitelist> whitelistRegistration(String loggedInUser, List<WhitelistRegDTO> whitelistRegDTOS) {
+    public List<RegistrationWhitelist> whitelistRegistration(List<WhitelistRegDTO> whitelistRegDTOS) {
         List<RegistrationWhitelist> dtoList = new ArrayList<>();
         for (WhitelistRegDTO d : whitelistRegDTOS) {
-            RegistrationWhitelist record = new RegistrationWhitelist().buildInsert(loggedInUser, d);
+            RegistrationWhitelist record = new RegistrationWhitelist().buildInsert(HelperTools.getLoggedInUsername(), d);
             dtoList.add(record);
         }
         repoWhiteList.saveAll(dtoList);
         return repoWhiteList.findAll();
     }
 
-    public Model addProfileToModel(Model model) throws GenericException {
+    public Model addProfileToModel(Model model) {
         // Required for profile and password modals
         String loggedInUser = SecurityContextHolder.getContext().getAuthentication().getName();
         UserProfileDTO userProfileDTO = getProfile(loggedInUser);

@@ -12,14 +12,14 @@
 
     <custom th:insert="~{_base.html :: _alert}"></custom>
 
-    <h1 class="text-center">Assistants Management</h1>
+    <h1 class="text-center">Users Management</h1>
     <div id="working_area" class="flex-grow-1 p-5 rounded border" style="min-height: 80vh;">
 
         <!--  CONTENT      -->
         <form id="form_main_content" action="#" th:action="@{/admin/users/update}" th:object="${formObject}"
               method="POST">
             <div class="input-group mb-3">
-                <input th:field="*{id}" type="text" class="form-control" id="wl-id" name="wl-id"
+                <input th:field="*{uid}" type="text" class="form-control" id="wl-id" name="wl-id"
                        placeholder="id" required readonly hidden>
             </div>
             <div class="input-group mb-3">
@@ -27,33 +27,33 @@
                        placeholder="username" required readonly hidden>
             </div>
 
+            <div class="input-group mb-3" sec:authorize="hasAnyRole('ADMIN')">
+                <select class="form-select mb-4 col-4" th:field="*{organisationName}">
+                    <option th:each="item : ${orgList}" th:value="${item}"
+                            th:selected="*{organisationName}"
+                            th:text="${item}"></option>
+                </select>
+            </div>
+
             <div class="input-group mb-3">
-                                    <span class="input-group-text" id="name-icon">
-                                        <i class="fa-solid fa-user"></i>
-                                    </span>
+                <span class="input-group-text" id="name-icon"><i class="fa-solid fa-user"></i></span>
                 <input th:field="*{name}" type="text" class="form-control" id="wl-name" name="wl-name"
                        placeholder="name" required>
             </div>
 
             <div class="input-group mb-3">
-                                    <span class="input-group-text" id="surname-icon">
-                                       <i class="fa-solid fa-users"></i>
-                                    </span>
-                <input th:field="*{surname}" type="text" class="form-control" id="wl_surname"
-                       name="wl_surname"
+                <span class="input-group-text" id="surname-icon"><i class="fa-solid fa-users"></i></span>
+                <input th:field="*{surname}" type="text" class="form-control" id="wl_surname" name="wl_surname"
                        placeholder="surname" required>
             </div>
 
-            <div class="input-group mb-3">
-                                    <span class="input-group-text" id="email-icon">
-                                        <i class="fa-solid fa-envelope"></i>
-                                    </span>
+            <div class="input-group mb-3"><span class="input-group-text" id="email-icon"><i
+                    class="fa-solid fa-envelope"></i></span>
                 <input th:field="*{emailAddress}" type="email" class="form-control" id="wl-email" name="wl-email"
                        placeholder="email address" required>
             </div>
 
             <div class="input-group mb-3">
-
                 <select class="form-select mb-4 col-4" th:field="*{assistantId}">
                     <option th:each="enumType : ${assistantsEnumList}" th:value="${enumType}"
                             th:selected="*{assistantId}"
@@ -61,8 +61,7 @@
                 </select>
             </div>
 
-            <div class="input-group mb-3">
-
+            <div class="input-group mb-3" sec:authorize="hasAnyRole('ADMIN','ORG_ADMIN')">
                 <select class="form-select mb-4 col-4" th:field="*{roles}">
                     <option th:each="enumType : ${enumList}" th:value="${enumType}"
                             th:text="${enumType}"></option>

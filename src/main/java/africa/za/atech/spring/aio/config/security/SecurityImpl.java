@@ -36,10 +36,10 @@ public class SecurityImpl {
                 .requestMatchers("/register/**").permitAll()
                 .requestMatchers("/forgot").permitAll()
 
-                .requestMatchers("/admin/**").hasAnyRole("MANAGER", "ADMIN")
+                .requestMatchers("/admin/**").hasAnyRole("MANAGER", "ORG_ADMIN", "ADMIN")
 
-                .requestMatchers("/chat/**").hasAnyRole("USER", "MANAGER", "ADMIN")
-                .requestMatchers("/profile/**").hasAnyRole("USER", "MANAGER", "ADMIN")
+                .requestMatchers("/chat/**").hasAnyRole("USER", "MANAGER", "ORG_ADMIN", "ADMIN")
+                .requestMatchers("/profile/**").hasAnyRole("USER", "MANAGER", "ORG_ADMIN", "ADMIN")
 
                 .anyRequest().authenticated()
         );
